@@ -1,65 +1,144 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { SearchForm } from '@/components/search/SearchForm';
+import { SearchSummary } from '@/components/search/SearchSummary';
+import { FlightList } from '@/components/results/FlightList';
+import { FilterPanel } from '@/components/filters/FilterPanel';
+import { PriceGraph } from '@/components/graph/PriceGraph';
+import { MockDataLoader } from '@/components/results/MockDataLoader';
+import { useSearchStore } from '@/store/searchStore';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
+  const { flights, searchParams } = useSearchStore();
+  const hasResults = flights.length > 0;
+  const hasSearched = searchParams.origin && searchParams.destination;
+  const [isSearchExpanded, setIsSearchExpanded] = useState(true);
+
+  // Collapse search form when results come in
+  useEffect(() => {
+    if (hasResults) {
+      setIsSearchExpanded(false);
+    }
+  }, [hasResults]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/30 flex flex-col">
+      {/* Mock Data Loader for Testing */}
+      <MockDataLoader />
+      
+      {/* Skip Link for Accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-brand-600 focus:text-white focus:rounded-lg"
+      >
+        Skip to main content
+      </a>
+
+      {/* Header */}
+      <header className="w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/logo.png" 
+              alt="SkyPulse Logo" 
+              className="h-10 w-10 rounded-lg object-contain"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <span className="font-bold text-xl text-gray-900">SkyPulse</span>
+          </div>
         </div>
-      </main>
-    </div>
+      </header>
+
+      {/* Main Content */}
+      <section id="main-content" className="w-full py-6 sm:py-8 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-7xl mx-auto">
+          {/* Hero - Only show when no results */}
+          {!hasSearched && (
+            <div className="text-center mb-8 animate-fade-in">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+                Find Your Perfect{' '}
+                <span className="bg-gradient-to-r from-brand-600 to-coral-500 bg-clip-text text-transparent">
+                  Flight
+                </span>
+              </h1>
+              <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
+                Compare prices from hundreds of airlines and travel sites
+              </p>
+            </div>
+          )}
+
+          {/* Search Section */}
+          <div className="mb-6">
+            {hasResults && !isSearchExpanded ? (
+              /* Collapsed Summary */
+              <SearchSummary 
+                onEdit={() => setIsSearchExpanded(true)}
+                className="animate-fade-in"
+              />
+            ) : (
+              /* Full Search Form */
+              <div className={cn(
+                "transition-all duration-300",
+                hasResults ? "animate-slide-down" : ""
+              )}>
+                <SearchForm />
+              </div>
+            )}
+          </div>
+
+          {/* Results Section */}
+          {hasResults && (
+            <div className="animate-fade-in">
+              {/* Price Graph */}
+              <div className="mb-6">
+                <PriceGraph />
+              </div>
+
+              {/* Filter + Results Layout */}
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Mobile Filter Button */}
+                <div className="lg:hidden flex gap-3">
+                  <FilterPanel />
+                </div>
+
+                {/* Desktop Sidebar */}
+                <aside className="hidden lg:block w-72 shrink-0" aria-label="Flight filters">
+                  <div className="sticky top-24">
+                    <FilterPanel />
+                  </div>
+                </aside>
+
+                {/* Results */}
+                <div className="flex-1 min-w-0">
+                  <FlightList />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Initial Empty State */}
+          {!hasResults && (
+            <div className="mt-8">
+              <FlightList />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="w-full py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-100 bg-white/50 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+          <p>© {new Date().getFullYear()} SkyPulse. Flight data provided by Amadeus.</p>
+          <nav aria-label="Footer navigation">
+            <div className="flex items-center gap-4">
+              <a href="#" className="hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded">Privacy</a>
+              <a href="#" className="hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded">Terms</a>
+              <a href="#" className="hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded">Contact</a>
+            </div>
+          </nav>
+        </div>
+      </footer>
+    </main>
   );
 }

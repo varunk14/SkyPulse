@@ -1,25 +1,77 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeftRight, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AirportSelect } from './AirportSelect';
 import { DatePicker } from './DatePicker';
 import { PassengerSelect } from './PassengerSelect';
+import { RecentSearches } from './RecentSearches';
 import { useSearchStore } from '@/store/searchStore';
+import { useRecentSearches, RecentSearch } from '@/hooks/useRecentSearches';
 import { cn } from '@/lib/utils';
 import { format, addDays } from 'date-fns';
 
 export function SearchForm() {
   const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary } = useSearchStore();
+  const { addSearch, searches } = useRecentSearches();
   const [isSearching, setIsSearching] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
+  const originRef = useRef<HTMLDivElement>(null);
+
+  // Close recent searches when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (originRef.current && !originRef.current.contains(event.target as Node)) {
+        setShowRecent(false);
+      }
+    };
+
+    if (showRecent) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showRecent]);
 
   const swapAirports = () => {
     setSearchParams({
       origin: searchParams.destination,
       destination: searchParams.origin,
     });
+  };
+
+  const handleRecentSelect = (search: RecentSearch) => {
+    // Find airports by IATA code
+    const loadAirportsFromRecent = async () => {
+      try {
+        const [originRes, destRes] = await Promise.all([
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}`),
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}`)
+        ]);
+
+        const originData = await originRes.json();
+        const destData = await destRes.json();
+
+        // Find exact match by IATA code
+        const originAirport = originData.data?.find((a: any) => a.iataCode === search.from.code);
+        const destAirport = destData.data?.find((a: any) => a.iataCode === search.to.code);
+
+        if (originAirport && destAirport) {
+          setSearchParams({
+            origin: originAirport,
+            destination: destAirport,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load airports from recent search:', error);
+      }
+    };
+
+    loadAirportsFromRecent();
+    setShowRecent(false);
   };
 
   const updateURLWithSearch = () => {
@@ -100,6 +152,15 @@ export function SearchForm() {
       setFlights(data.data || []);
       setAirlinesDictionary(data.dictionaries?.carriers || {});
       
+      // Save to recent searches
+      if (searchParams.origin && searchParams.destination && searchParams.departureDate) {
+        addSearch({
+          from: { code: searchParams.origin.iataCode, city: searchParams.origin.cityName },
+          to: { code: searchParams.destination.iataCode, city: searchParams.destination.cityName },
+          date: format(searchParams.departureDate, "MMM dd"),
+        });
+      }
+      
       // Update URL with search parameters
       updateURLWithSearch();
     } catch (error: any) {
@@ -168,13 +229,32 @@ export function SearchForm() {
       {/* Search Fields */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         {/* Origin */}
-        <div className="lg:col-span-3">
+        <div 
+          ref={originRef}
+          className="lg:col-span-3 relative"
+          onClick={() => {
+            if (searches.length > 0) {
+              setShowRecent(true);
+            }
+          }}
+        >
           <AirportSelect
             value={searchParams.origin}
-            onChange={(airport) => setSearchParams({ origin: airport })}
+            onChange={(airport) => {
+              setSearchParams({ origin: airport });
+              setShowRecent(false);
+            }}
             placeholder="Where from?"
             icon="departure"
           />
+          <AnimatePresence>
+            {showRecent && searches.length > 0 && (
+              <RecentSearches
+                isVisible={showRecent}
+                onSelect={handleRecentSelect}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Swap Button */}

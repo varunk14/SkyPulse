@@ -7,6 +7,7 @@ import { SortDropdown, type SortOption } from './SortDropdown';
 import { FlightResultsSkeleton } from '@/components/shared/FlightCardSkeleton';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { useSearchStore } from '@/store/searchStore';
+import { useRecentSearches, RecentSearch } from '@/hooks/useRecentSearches';
 import { parseDuration } from '@/lib/formatters';
 import { parseISO } from 'date-fns';
 import { AlertCircle, SearchX, Plane } from 'lucide-react';
@@ -39,7 +40,8 @@ const cardVariants = {
 };
 
 export function FlightList() {
-  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters } = useSearchStore();
+  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams } = useSearchStore();
+  const { searches } = useRecentSearches();
   const [sortBy, setSortBy] = useState<SortOption>('price_asc');
 
   // Apply filters and sorting
@@ -142,6 +144,32 @@ export function FlightList() {
     );
   }
 
+  // Handle recent search selection
+  const handleRecentSelect = async (search: RecentSearch) => {
+    try {
+      const [originRes, destRes] = await Promise.all([
+        fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}`),
+        fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}`)
+      ]);
+
+      const originData = await originRes.json();
+      const destData = await destRes.json();
+
+      // Find exact match by IATA code
+      const originAirport = originData.data?.find((a: any) => a.iataCode === search.from.code);
+      const destAirport = destData.data?.find((a: any) => a.iataCode === search.to.code);
+
+      if (originAirport && destAirport) {
+        setSearchParams({
+          origin: originAirport,
+          destination: destAirport,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load airports from recent search:', error);
+    }
+  };
+
   // Empty state (no search yet)
   if (flights.length === 0) {
     return (
@@ -152,9 +180,25 @@ export function FlightList() {
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
           Ready to Explore?
         </h2>
-        <p className="text-gray-600 max-w-md mx-auto">
+        <p className="text-gray-600 max-w-md mx-auto mb-6">
           Enter your travel details above to discover amazing flight deals from hundreds of airlines
         </p>
+        {searches.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Your recent searches</h3>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {searches.map((search) => (
+                <button
+                  key={search.id}
+                  onClick={() => handleRecentSelect(search)}
+                  className="px-3 py-2 bg-white rounded-full border hover:border-brand-500 hover:bg-brand-50 transition-all text-sm"
+                >
+                  {search.from.code} → {search.to.code}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

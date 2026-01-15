@@ -237,7 +237,7 @@ export default function Home() {
           </AnimatePresence>
 
           {/* Search Section */}
-          <div className="mb-6 relative" style={{ zIndex: 100 }}>
+          <div className="mb-6">
             {hasResults && !isSearchExpanded ? (
               /* Collapsed Summary */
               <SearchSummary 
@@ -263,8 +263,6 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="relative"
-                style={{ zIndex: 1 }}
               >
                 {/* Price Graph */}
                 <div className="mb-6">

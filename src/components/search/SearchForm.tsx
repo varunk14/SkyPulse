@@ -48,22 +48,33 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
   };
 
   const handleRecentSelect = (search: RecentSearch) => {
-    // Immediately update state - no async operations needed
-    // Recent search already has all the data we need
-    setSearchParams({
-      origin: {
-        iataCode: search.from.code,
-        cityName: search.from.city,
-        name: search.from.city,
-      },
-      destination: {
-        iataCode: search.to.code,
-        cityName: search.to.city,
-        name: search.to.city,
-      },
-    });
-    
-    // Close dropdown immediately
+    // Find airports by IATA code
+    const loadAirportsFromRecent = async () => {
+      try {
+        const [originRes, destRes] = await Promise.all([
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}`),
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}`)
+        ]);
+
+        const originData = await originRes.json();
+        const destData = await destRes.json();
+
+        // Find exact match by IATA code
+        const originAirport = originData.data?.find((a: any) => a.iataCode === search.from.code);
+        const destAirport = destData.data?.find((a: any) => a.iataCode === search.to.code);
+
+        if (originAirport && destAirport) {
+          setSearchParams({
+            origin: originAirport,
+            destination: destAirport,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load airports from recent search:', error);
+      }
+    };
+
+    loadAirportsFromRecent();
     setShowRecent(false);
   };
 
@@ -225,7 +236,6 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         <div 
           ref={originRef}
           className="lg:col-span-3 relative"
-          style={{ zIndex: 9999 }}
           onClick={() => {
             if (searches.length > 0) {
               setShowRecent(true);

@@ -9,12 +9,75 @@ import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
 import { useSearchStore } from '@/store/searchStore';
 import { cn } from '@/lib/utils';
+import { Airport } from '@/types';
+import { parseISO } from 'date-fns';
 
 export default function Home() {
-  const { flights, searchParams } = useSearchStore();
+  const { flights, searchParams, setSearchParams } = useSearchStore();
   const hasResults = flights.length > 0;
   const hasSearched = searchParams.origin && searchParams.destination;
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
+  const [urlParamsLoaded, setUrlParamsLoaded] = useState(false);
+
+  // Load search parameters from URL on mount
+  useEffect(() => {
+    if (urlParamsLoaded) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+    const to = params.get("to");
+    const departure = params.get("departure");
+    const returnDate = params.get("return");
+    const passengers = params.get("passengers");
+    const children = params.get("children");
+    const infants = params.get("infants");
+    const cabinClass = params.get("class");
+    const tripType = params.get("tripType");
+
+    if (from && to && departure) {
+      // Fetch airports by IATA code
+      const loadAirportsFromURL = async () => {
+        try {
+          const [originRes, destRes] = await Promise.all([
+            fetch(`/api/airports/search?keyword=${encodeURIComponent(from)}`),
+            fetch(`/api/airports/search?keyword=${encodeURIComponent(to)}`)
+          ]);
+
+          const originData = await originRes.json();
+          const destData = await destRes.json();
+
+          // Find exact match by IATA code
+          const originAirport = originData.data?.find((a: Airport) => a.iataCode === from);
+          const destAirport = destData.data?.find((a: Airport) => a.iataCode === to);
+
+          if (originAirport && destAirport) {
+            const departureDate = parseISO(departure);
+            const returnDateObj = returnDate ? parseISO(returnDate) : null;
+
+            setSearchParams({
+              origin: originAirport,
+              destination: destAirport,
+              departureDate: departureDate,
+              returnDate: returnDateObj,
+              passengers: {
+                adults: passengers ? parseInt(passengers) : 1,
+                children: children ? parseInt(children) : 0,
+                infants: infants ? parseInt(infants) : 0,
+              },
+              cabinClass: (cabinClass as any) || 'ECONOMY',
+              tripType: (tripType as any) || 'roundTrip',
+            });
+          }
+        } catch (error) {
+          console.error('Failed to load airports from URL:', error);
+        }
+      };
+
+      loadAirportsFromURL();
+    }
+
+    setUrlParamsLoaded(true);
+  }, [urlParamsLoaded, setSearchParams]);
 
   // Collapse search form when results come in
   useEffect(() => {

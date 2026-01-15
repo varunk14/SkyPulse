@@ -22,6 +22,42 @@ export function SearchForm() {
     });
   };
 
+  const updateURLWithSearch = () => {
+    if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("from", searchParams.origin.iataCode);
+    url.searchParams.set("to", searchParams.destination.iataCode);
+    url.searchParams.set("departure", format(searchParams.departureDate, 'yyyy-MM-dd'));
+    
+    if (searchParams.returnDate && searchParams.tripType === 'roundTrip') {
+      url.searchParams.set("return", format(searchParams.returnDate, 'yyyy-MM-dd'));
+    } else {
+      url.searchParams.delete("return");
+    }
+    
+    url.searchParams.set("passengers", String(searchParams.passengers?.adults || 1));
+    
+    if (searchParams.passengers.children > 0) {
+      url.searchParams.set("children", String(searchParams.passengers.children));
+    } else {
+      url.searchParams.delete("children");
+    }
+    
+    if (searchParams.passengers.infants > 0) {
+      url.searchParams.set("infants", String(searchParams.passengers.infants));
+    } else {
+      url.searchParams.delete("infants");
+    }
+    
+    url.searchParams.set("class", searchParams.cabinClass || "ECONOMY");
+    url.searchParams.set("tripType", searchParams.tripType || "roundTrip");
+    
+    window.history.replaceState({}, "", url.toString());
+  };
+
   const handleSearch = async () => {
     // Validation
     if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
@@ -63,6 +99,9 @@ export function SearchForm() {
 
       setFlights(data.data || []);
       setAirlinesDictionary(data.dictionaries?.carriers || {});
+      
+      // Update URL with search parameters
+      updateURLWithSearch();
     } catch (error: any) {
       setError(error.message);
       setFlights([]);

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FlightCard } from './FlightCard';
 import { SortDropdown, type SortOption } from './SortDropdown';
 import { FlightResultsSkeleton } from '@/components/shared/FlightCardSkeleton';
+import { ShareButton } from '@/components/shared/ShareButton';
 import { useSearchStore } from '@/store/searchStore';
 import { parseDuration } from '@/lib/formatters';
 import { parseISO } from 'date-fns';
@@ -190,7 +191,10 @@ export function FlightList() {
             Prices include taxes and fees
           </p>
         </div>
-        <SortDropdown value={sortBy} onChange={setSortBy} />
+        <div className="flex items-center gap-2">
+          <ShareButton />
+          <SortDropdown value={sortBy} onChange={setSortBy} />
+        </div>
       </div>
 
       {/* Flight Cards with staggered animation */}

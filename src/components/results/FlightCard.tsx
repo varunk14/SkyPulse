@@ -17,6 +17,7 @@ import {
   getAirlineLogo,
   isNextDay,
 } from '@/lib/formatters';
+import { FlightRouteMap } from '@/components/map/FlightRouteMap';
 
 // Badge pop animation variant
 const badgeVariants = {
@@ -302,69 +303,88 @@ interface FlightDetailsProps {
 function FlightDetails({ flight, airlineNames }: FlightDetailsProps) {
   return (
     <div className="pt-4 space-y-6">
-      {flight.itineraries.map((itinerary, itinIndex) => (
-        <div key={itinIndex}>
-          <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Plane className={cn(
-              "h-4 w-4",
-              itinIndex === 0 ? "text-brand-600" : "text-brand-600 rotate-180"
-            )} aria-hidden="true" />
-            {itinIndex === 0 ? 'Outbound' : 'Return'} Flight
-          </h4>
-          
-          <div className="space-y-3">
-            {itinerary.segments.map((segment, segIndex) => (
-              <div
-                key={segIndex}
-                className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
-              >
-                <img
-                  src={getAirlineLogo(segment.carrierCode)}
-                  alt={airlineNames[segment.carrierCode] || segment.carrierCode}
-                  className="h-8 w-8 rounded object-contain bg-white p-0.5"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium text-gray-900">
-                      {airlineNames[segment.carrierCode] || segment.carrierCode}{' '}
-                      <span className="text-gray-500 font-normal">
-                        {segment.carrierCode}{segment.number}
-                      </span>
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {formatIsoDuration(segment.duration)}
+      {flight.itineraries.map((itinerary, itinIndex) => {
+        const firstSegment = itinerary.segments[0];
+        const lastSegment = itinerary.segments[itinerary.segments.length - 1];
+        const origin = firstSegment.departure.iataCode;
+        const destination = lastSegment.arrival.iataCode;
+        const stops = itinerary.segments.length > 1 
+          ? itinerary.segments.slice(0, -1).map(s => s.arrival.iataCode)
+          : [];
+
+        return (
+          <div key={itinIndex}>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Plane className={cn(
+                "h-4 w-4",
+                itinIndex === 0 ? "text-brand-600" : "text-brand-600 rotate-180"
+              )} aria-hidden="true" />
+              {itinIndex === 0 ? 'Outbound' : 'Return'} Flight
+            </h4>
+            
+            <div className="space-y-3">
+              {itinerary.segments.map((segment, segIndex) => (
+                <div
+                  key={segIndex}
+                  className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <img
+                    src={getAirlineLogo(segment.carrierCode)}
+                    alt={airlineNames[segment.carrierCode] || segment.carrierCode}
+                    className="h-8 w-8 rounded object-contain bg-white p-0.5"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-gray-900">
+                        {airlineNames[segment.carrierCode] || segment.carrierCode}{' '}
+                        <span className="text-gray-500 font-normal">
+                          {segment.carrierCode}{segment.number}
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatIsoDuration(segment.duration)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <div>
+                        <span className="font-semibold">{formatTime(segment.departure.at)}</span>
+                        <span className="text-gray-500 ml-1">{segment.departure.iataCode}</span>
+                        {segment.departure.terminal && (
+                          <span className="text-gray-400 text-xs ml-1">T{segment.departure.terminal}</span>
+                        )}
+                      </div>
+                      <span className="text-gray-400" aria-hidden="true">→</span>
+                      <div>
+                        <span className="font-semibold">{formatTime(segment.arrival.at)}</span>
+                        <span className="text-gray-500 ml-1">{segment.arrival.iataCode}</span>
+                        {segment.arrival.terminal && (
+                          <span className="text-gray-400 text-xs ml-1">T{segment.arrival.terminal}</span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Aircraft: {segment.aircraft.code}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div>
-                      <span className="font-semibold">{formatTime(segment.departure.at)}</span>
-                      <span className="text-gray-500 ml-1">{segment.departure.iataCode}</span>
-                      {segment.departure.terminal && (
-                        <span className="text-gray-400 text-xs ml-1">T{segment.departure.terminal}</span>
-                      )}
-                    </div>
-                    <span className="text-gray-400" aria-hidden="true">→</span>
-                    <div>
-                      <span className="font-semibold">{formatTime(segment.arrival.at)}</span>
-                      <span className="text-gray-500 ml-1">{segment.arrival.iataCode}</span>
-                      {segment.arrival.terminal && (
-                        <span className="text-gray-400 text-xs ml-1">T{segment.arrival.terminal}</span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Aircraft: {segment.aircraft.code}
-                  </p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Flight Route Map */}
+            <div className="border-t pt-4 mt-4">
+              <FlightRouteMap
+                origin={origin}
+                destination={destination}
+                stops={stops}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Booking Info */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">

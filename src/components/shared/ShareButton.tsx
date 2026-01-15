@@ -9,10 +9,13 @@ export function ShareButton() {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = new URL(window.location.href);
+    
+    // Add shared=true flag to indicate this is a shared link
+    url.searchParams.set("shared", "true");
     
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url.toString());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {

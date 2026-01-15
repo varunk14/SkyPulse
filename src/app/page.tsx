@@ -24,61 +24,79 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const originInputRef = useRef<HTMLButtonElement | null>(null);
 
-  // Load search parameters from URL on mount
+  // Load search parameters from URL on mount - only for shared links
   useEffect(() => {
     if (urlParamsLoaded) return;
 
     const params = new URLSearchParams(window.location.search);
-    const from = params.get("from");
-    const to = params.get("to");
-    const departure = params.get("departure");
-    const returnDate = params.get("return");
-    const passengers = params.get("passengers");
-    const children = params.get("children");
-    const infants = params.get("infants");
-    const cabinClass = params.get("class");
-    const tripType = params.get("tripType");
+    const isShared = params.get("shared") === "true";
+    
+    // Check if user has already visited this session (refresh detection)
+    const hasVisited = sessionStorage.getItem("skypulse-visited");
 
-    if (from && to && departure) {
-      // Fetch airports by IATA code
-      const loadAirportsFromURL = async () => {
-        try {
-          const [originRes, destRes] = await Promise.all([
-            fetch(`/api/airports/search?keyword=${encodeURIComponent(from)}`),
-            fetch(`/api/airports/search?keyword=${encodeURIComponent(to)}`)
-          ]);
+    // Only fill form if:
+    // 1. URL has "shared=true" flag (it's a shared link)
+    // 2. User hasn't visited yet this session (not a refresh)
+    if (isShared && !hasVisited) {
+      const from = params.get("from");
+      const to = params.get("to");
+      const departure = params.get("departure");
+      const returnDate = params.get("return");
+      const passengers = params.get("passengers");
+      const children = params.get("children");
+      const infants = params.get("infants");
+      const cabinClass = params.get("class");
+      const tripType = params.get("tripType");
 
-          const originData = await originRes.json();
-          const destData = await destRes.json();
+      if (from && to && departure) {
+        // Fetch airports by IATA code
+        const loadAirportsFromURL = async () => {
+          try {
+            const [originRes, destRes] = await Promise.all([
+              fetch(`/api/airports/search?keyword=${encodeURIComponent(from)}`),
+              fetch(`/api/airports/search?keyword=${encodeURIComponent(to)}`)
+            ]);
 
-          // Find exact match by IATA code
-          const originAirport = originData.data?.find((a: Airport) => a.iataCode === from);
-          const destAirport = destData.data?.find((a: Airport) => a.iataCode === to);
+            const originData = await originRes.json();
+            const destData = await destRes.json();
 
-          if (originAirport && destAirport) {
-            const departureDate = parseISO(departure);
-            const returnDateObj = returnDate ? parseISO(returnDate) : null;
+            // Find exact match by IATA code
+            const originAirport = originData.data?.find((a: Airport) => a.iataCode === from);
+            const destAirport = destData.data?.find((a: Airport) => a.iataCode === to);
 
-            setSearchParams({
-              origin: originAirport,
-              destination: destAirport,
-              departureDate: departureDate,
-              returnDate: returnDateObj,
-              passengers: {
-                adults: passengers ? parseInt(passengers) : 1,
-                children: children ? parseInt(children) : 0,
-                infants: infants ? parseInt(infants) : 0,
-              },
-              cabinClass: (cabinClass as any) || 'ECONOMY',
-              tripType: (tripType as any) || 'roundTrip',
-            });
+            if (originAirport && destAirport) {
+              const departureDate = parseISO(departure);
+              const returnDateObj = returnDate ? parseISO(returnDate) : null;
+
+              setSearchParams({
+                origin: originAirport,
+                destination: destAirport,
+                departureDate: departureDate,
+                returnDate: returnDateObj,
+                passengers: {
+                  adults: passengers ? parseInt(passengers) : 1,
+                  children: children ? parseInt(children) : 0,
+                  infants: infants ? parseInt(infants) : 0,
+                },
+                cabinClass: (cabinClass as any) || 'ECONOMY',
+                tripType: (tripType as any) || 'roundTrip',
+              });
+            }
+          } catch (error) {
+            console.error('Failed to load airports from URL:', error);
           }
-        } catch (error) {
-          console.error('Failed to load airports from URL:', error);
-        }
-      };
+        };
 
-      loadAirportsFromURL();
+        loadAirportsFromURL();
+      }
+    }
+
+    // Mark as visited for this session (prevents filling on refresh)
+    sessionStorage.setItem("skypulse-visited", "true");
+
+    // Clear URL params after reading (keeps URL clean)
+    if (window.location.search) {
+      window.history.replaceState({}, "", window.location.pathname);
     }
 
     setUrlParamsLoaded(true);
@@ -135,7 +153,9 @@ export default function Home() {
       key: "s",
       action: () => {
         if (hasResults) {
-          navigator.clipboard.writeText(window.location.href).then(() => {
+          const url = new URL(window.location.href);
+          url.searchParams.set("shared", "true");
+          navigator.clipboard.writeText(url.toString()).then(() => {
             // Show brief feedback (you could add a toast here)
             console.log("URL copied to clipboard");
           });

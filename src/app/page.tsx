@@ -7,7 +7,6 @@ import { SearchSummary } from '@/components/search/SearchSummary';
 import { FlightList } from '@/components/results/FlightList';
 import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
-import { MockDataLoader } from '@/components/results/MockDataLoader';
 import { useSearchStore } from '@/store/searchStore';
 import { cn } from '@/lib/utils';
 
@@ -31,9 +30,6 @@ export default function Home() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/30 flex flex-col"
     >
-      {/* Mock Data Loader for Testing */}
-      <MockDataLoader />
-      
       {/* Skip Link for Accessibility */}
       <a 
         href="#main-content" 

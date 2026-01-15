@@ -123,7 +123,7 @@ export const FilterPanel = memo(function FilterPanel({ className }: FilterPanelP
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  transition={{ type: "spring" as const, stiffness: 500, damping: 15 }}
                 >
                   <Badge variant="secondary" className="text-xs">
                     {activeFilterCount}
@@ -167,7 +167,7 @@ export const FilterPanel = memo(function FilterPanel({ className }: FilterPanelP
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: "spring" as const, damping: 25, stiffness: 200 }}
             className="h-full flex flex-col"
           >
             <SheetHeader className="p-5 border-b">

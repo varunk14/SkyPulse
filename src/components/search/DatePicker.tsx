@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,12 +17,19 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ value, onChange, placeholder, minDate, disabled }: DatePickerProps) {
+  const [open, setOpen] = useState(false);
+
   const ariaLabel = value 
     ? `${placeholder} date: ${format(value, 'EEEE, MMMM d, yyyy')}` 
     : `Select ${placeholder.toLowerCase()} date`;
 
+  const handleDateSelect = (date: Date | undefined) => {
+    onChange(date || null);
+    setOpen(false); // Close the popover after selection
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -56,7 +64,7 @@ export function DatePicker({ value, onChange, placeholder, minDate, disabled }: 
         <Calendar
           mode="single"
           selected={value || undefined}
-          onSelect={(date) => onChange(date || null)}
+          onSelect={handleDateSelect}
           disabled={(date) => minDate ? date < minDate : date < new Date()}
           initialFocus
         />

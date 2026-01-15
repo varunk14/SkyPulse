@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SearchForm } from '@/components/search/SearchForm';
 import { SearchSummary } from '@/components/search/SearchSummary';
 import { FlightList } from '@/components/results/FlightList';
@@ -24,7 +25,12 @@ export default function Home() {
   }, [hasResults]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/30 flex flex-col">
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/30 flex flex-col"
+    >
       {/* Mock Data Loader for Testing */}
       <MockDataLoader />
       
@@ -54,19 +60,27 @@ export default function Home() {
       <section id="main-content" className="w-full py-6 sm:py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="max-w-7xl mx-auto">
           {/* Hero - Only show when no results */}
-          {!hasSearched && (
-            <div className="text-center mb-8 animate-fade-in">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
-                Find Your Perfect{' '}
-                <span className="bg-gradient-to-r from-brand-600 to-coral-500 bg-clip-text text-transparent">
-                  Flight
-                </span>
-              </h1>
-              <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
-                Compare prices from hundreds of airlines and travel sites
-              </p>
-            </div>
-          )}
+          <AnimatePresence>
+            {!hasSearched && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="text-center mb-8"
+              >
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+                  Find Your Perfect{' '}
+                  <span className="bg-gradient-to-r from-brand-600 to-coral-500 bg-clip-text text-transparent">
+                    Flight
+                  </span>
+                </h1>
+                <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
+                  Compare prices from hundreds of airlines and travel sites
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Search Section */}
           <div className="mb-6">
@@ -88,34 +102,46 @@ export default function Home() {
           </div>
 
           {/* Results Section */}
-          {hasResults && (
-            <div className="animate-fade-in">
-              {/* Price Graph */}
-              <div className="mb-6">
-                <PriceGraph />
-              </div>
-
-              {/* Filter + Results Layout */}
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Mobile Filter Button */}
-                <div className="lg:hidden flex gap-3">
-                  <FilterPanel />
+          <AnimatePresence>
+            {hasResults && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Price Graph */}
+                <div className="mb-6">
+                  <PriceGraph />
                 </div>
 
-                {/* Desktop Sidebar */}
-                <aside className="hidden lg:block w-72 shrink-0" aria-label="Flight filters">
-                  <div className="sticky top-24">
+                {/* Filter + Results Layout */}
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Mobile Filter Button */}
+                  <motion.div 
+                    className="lg:hidden flex gap-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     <FilterPanel />
-                  </div>
-                </aside>
+                  </motion.div>
 
-                {/* Results */}
-                <div className="flex-1 min-w-0">
-                  <FlightList />
+                  {/* Desktop Sidebar */}
+                  <aside className="hidden lg:block w-72 shrink-0" aria-label="Flight filters">
+                    <div className="sticky top-24">
+                      <FilterPanel />
+                    </div>
+                  </aside>
+
+                  {/* Results */}
+                  <div className="flex-1 min-w-0">
+                    <FlightList />
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Initial Empty State */}
           {!hasResults && (
@@ -139,6 +165,6 @@ export default function Home() {
           </nav>
         </div>
       </footer>
-    </main>
+    </motion.main>
   );
 }

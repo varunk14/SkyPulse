@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Plane, Clock, Briefcase } from 'lucide-react';
 import { FlightOffer } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,16 @@ import {
   getAirlineLogo,
   isNextDay,
 } from '@/lib/formatters';
+
+// Badge pop animation variant
+const badgeVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: { 
+    scale: 1, 
+    opacity: 1,
+    transition: { type: "spring", stiffness: 500, damping: 15, delay: 0.3 }
+  }
+};
 
 interface FlightCardProps {
   flight: FlightOffer;
@@ -40,11 +51,16 @@ export const FlightCard = memo(function FlightCard({
   const airlineName = airlineNames[mainCarrier] || mainCarrier;
 
   return (
-    <div
+    <motion.div
+      whileHover={{ 
+        scale: 1.015, 
+        boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+        transition: { duration: 0.2 }
+      }}
+      whileTap={{ scale: 0.995 }}
       className={cn(
-        "bg-white rounded-xl border transition-all duration-200",
-        "hover:shadow-lg hover:border-brand-200",
-        "hover-lift",
+        "bg-white rounded-xl border transition-colors duration-200",
+        "hover:border-brand-200",
         isExpanded ? "border-brand-300 shadow-md" : "border-gray-100 shadow-sm"
       )}
       role="article"
@@ -96,14 +112,26 @@ export const FlightCard = memo(function FlightCard({
           <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 lg:w-36 shrink-0">
             <div className="flex flex-wrap gap-1.5">
               {isCheapest && (
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-                  Best price
-                </Badge>
+                <motion.div
+                  variants={badgeVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                    Best price
+                  </Badge>
+                </motion.div>
               )}
               {isFastest && (
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-xs">
-                  Fastest
-                </Badge>
+                <motion.div
+                  variants={badgeVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-xs">
+                    Fastest
+                  </Badge>
+                </motion.div>
               )}
             </div>
             <div className="text-right">
@@ -140,15 +168,25 @@ export const FlightCard = memo(function FlightCard({
       </button>
 
       {/* Expanded Details */}
-      {isExpanded && (
-        <div className="px-6 pb-6 border-t border-gray-100 animate-in slide-in-from-top-2 duration-200">
-          <FlightDetails
-            flight={flight}
-            airlineNames={airlineNames}
-          />
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-6 border-t border-gray-100">
+              <FlightDetails
+                flight={flight}
+                airlineNames={airlineNames}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 });
 

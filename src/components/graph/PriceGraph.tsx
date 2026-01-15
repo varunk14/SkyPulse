@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   AreaChart,
   Area,
@@ -120,7 +121,12 @@ export function PriceGraph() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="bg-white rounded-xl border border-gray-100 p-6"
+    >
       {/* Header with stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -231,6 +237,6 @@ export function PriceGraph() {
           <span>Average price</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

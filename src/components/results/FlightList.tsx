@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FlightCard } from './FlightCard';
 import { SortDropdown, type SortOption } from './SortDropdown';
 import { FlightResultsSkeleton } from '@/components/shared/FlightCardSkeleton';
@@ -10,6 +11,31 @@ import { parseISO } from 'date-fns';
 import { AlertCircle, SearchX, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { announce } from '@/lib/a11y';
+
+// Animation variants for staggered flight cards
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.3, ease: "easeOut" }
+  },
+  exit: { 
+    opacity: 0, 
+    x: -50,
+    transition: { duration: 0.2 }
+  }
+};
 
 export function FlightList() {
   const { flights, isLoading, error, airlinesDictionary, filters, resetFilters } = useSearchStore();
@@ -168,18 +194,32 @@ export function FlightList() {
       </div>
 
       {/* Flight Cards with staggered animation */}
-      <div className="space-y-4 stagger-children" role="list">
-        {processedFlights.map((flight, index) => (
-          <FlightCard
-            key={flight.id}
-            flight={flight}
-            airlineNames={airlinesDictionary}
-            isCheapest={flight.id === cheapestId}
-            isFastest={flight.id === fastestId}
-            rank={index + 1}
-          />
-        ))}
-      </div>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-4"
+        role="list"
+      >
+        <AnimatePresence mode="popLayout">
+          {processedFlights.map((flight, index) => (
+            <motion.div
+              key={flight.id}
+              variants={cardVariants}
+              exit="exit"
+              layout
+            >
+              <FlightCard
+                flight={flight}
+                airlineNames={airlinesDictionary}
+                isCheapest={flight.id === cheapestId}
+                isFastest={flight.id === fastestId}
+                rank={index + 1}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ArrowLeftRight, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AirportSelect } from './AirportSelect';
@@ -84,7 +85,12 @@ export function SearchForm() {
   ];
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+    >
       {/* Trip Type & Cabin Class */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <div className="flex rounded-lg bg-gray-100 p-1">
@@ -134,15 +140,17 @@ export function SearchForm() {
 
         {/* Swap Button */}
         <div className="hidden lg:flex lg:col-span-1 items-center justify-center">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full h-10 w-10 bg-white border-gray-200 hover:bg-gray-50 hover:border-brand-300 transition-all"
-            onClick={swapAirports}
-            aria-label="Swap departure and arrival airports"
-          >
-            <ArrowLeftRight className="h-4 w-4 text-gray-600" aria-hidden="true" />
-          </Button>
+          <motion.div whileHover={{ scale: 1.1, rotate: 180 }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.2 }}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full h-10 w-10 bg-white border-gray-200 hover:bg-gray-50 hover:border-brand-300 transition-all"
+              onClick={swapAirports}
+              aria-label="Swap departure and arrival airports"
+            >
+              <ArrowLeftRight className="h-4 w-4 text-gray-600" aria-hidden="true" />
+            </Button>
+          </motion.div>
         </div>
 
         {/* Destination */}
@@ -202,30 +210,36 @@ export function SearchForm() {
           />
         </div>
 
-        <Button
-          onClick={handleSearch}
-          disabled={isSearching}
-          className={cn(
-            "flex-1 sm:flex-none sm:min-w-[200px] h-14",
-            "bg-brand-600 hover:bg-brand-700 text-white",
-            "font-semibold text-base",
-            "transition-all duration-200",
-            "shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/30"
-          )}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex-1 sm:flex-none"
         >
-          {isSearching ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Searching...
-            </>
-          ) : (
-            <>
-              <Search className="mr-2 h-5 w-5" />
-              Search Flights
-            </>
-          )}
-        </Button>
+          <Button
+            onClick={handleSearch}
+            disabled={isSearching}
+            className={cn(
+              "w-full sm:min-w-[200px] h-14",
+              "bg-brand-600 hover:bg-brand-700 text-white",
+              "font-semibold text-base",
+              "transition-all duration-200",
+              "shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/30"
+            )}
+          >
+            {isSearching ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="mr-2 h-5 w-5" />
+                Search Flights
+              </>
+            )}
+          </Button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

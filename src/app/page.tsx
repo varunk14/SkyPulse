@@ -8,6 +8,7 @@ import { FlightList } from '@/components/results/FlightList';
 import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
 import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal';
+import { CompareBar } from '@/components/comparison/CompareBar';
 import { useSearchStore } from '@/store/searchStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
@@ -304,6 +305,9 @@ export default function Home() {
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
       />
+
+      {/* Compare Bar */}
+      <CompareBar />
     </motion.main>
   );
 }

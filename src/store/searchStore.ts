@@ -25,6 +25,12 @@ interface SearchStore {
   // Airlines dictionary (from API response)
   airlinesDictionary: Record<string, string>;
   setAirlinesDictionary: (dict: Record<string, string>) => void;
+  
+  // Comparison state
+  compareFlights: FlightOffer[];
+  addToCompare: (flight: FlightOffer) => void;
+  removeFromCompare: (flightId: string) => void;
+  clearCompare: () => void;
 }
 
 const defaultSearchParams: SearchParams = {
@@ -127,4 +133,20 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
   // Airlines dictionary
   airlinesDictionary: {},
   setAirlinesDictionary: (airlinesDictionary) => set({ airlinesDictionary }),
+
+  // Comparison state
+  compareFlights: [],
+  addToCompare: (flight) => {
+    set((state) => {
+      if (state.compareFlights.length >= 3) return state; // Max 3
+      if (state.compareFlights.find((f) => f.id === flight.id)) return state; // No duplicates
+      return { compareFlights: [...state.compareFlights, flight] };
+    });
+  },
+  removeFromCompare: (flightId) => {
+    set((state) => ({
+      compareFlights: state.compareFlights.filter((f) => f.id !== flightId),
+    }));
+  },
+  clearCompare: () => set({ compareFlights: [] }),
 }));

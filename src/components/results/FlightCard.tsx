@@ -2,11 +2,12 @@
 
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Plane, Clock, Briefcase } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plane, Clock, Briefcase, Check, Plus } from 'lucide-react';
 import { FlightOffer } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSearchStore } from '@/store/searchStore';
 import {
   formatTime,
   formatIsoDuration,
@@ -42,6 +43,8 @@ export const FlightCard = memo(function FlightCard({
   isFastest,
 }: FlightCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { compareFlights, addToCompare, removeFromCompare } = useSearchStore();
+  const isInCompare = compareFlights.some((f) => f.id === flight.id);
   
   const outbound = flight.itineraries[0];
   const returnFlight = flight.itineraries[1];
@@ -59,13 +62,31 @@ export const FlightCard = memo(function FlightCard({
       }}
       whileTap={{ scale: 0.995 }}
       className={cn(
-        "bg-white rounded-xl border transition-colors duration-200",
+        "relative bg-white rounded-xl border transition-colors duration-200",
         "hover:border-brand-200",
         isExpanded ? "border-brand-300 shadow-md" : "border-gray-100 shadow-sm"
       )}
       role="article"
       aria-label={`Flight by ${airlineName} for ${formatPrice(price, currency)}`}
     >
+      {/* Compare Checkbox Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          isInCompare ? removeFromCompare(flight.id) : addToCompare(flight);
+        }}
+        className={cn(
+          "absolute top-2 right-2 p-1.5 rounded-lg border transition-all z-10",
+          isInCompare 
+            ? "bg-brand-500 border-brand-500 text-white" 
+            : "bg-white border-gray-200 hover:border-brand-500 hover:bg-brand-50 text-gray-400 hover:text-brand-500"
+        )}
+        title={isInCompare ? "Remove from compare" : "Add to compare"}
+        aria-label={isInCompare ? "Remove from compare" : "Add to compare"}
+      >
+        {isInCompare ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+      </button>
+
       {/* Main Content */}
       <div className="p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchForm } from '@/components/search/SearchForm';
 import { SearchSummary } from '@/components/search/SearchSummary';
 import { FlightList } from '@/components/results/FlightList';
 import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
+import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal';
 import { useSearchStore } from '@/store/searchStore';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
 import { Airport } from '@/types';
 import { parseISO } from 'date-fns';
@@ -18,6 +20,8 @@ export default function Home() {
   const hasSearched = searchParams.origin && searchParams.destination;
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [urlParamsLoaded, setUrlParamsLoaded] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const originInputRef = useRef<HTMLButtonElement | null>(null);
 
   // Load search parameters from URL on mount
   useEffect(() => {
@@ -86,6 +90,68 @@ export default function Home() {
     }
   }, [hasResults]);
 
+  // Keyboard shortcuts (only active on devices with physical keyboards)
+  // Note: Shortcuts automatically detect if device has physical keyboard
+  useKeyboardShortcuts([
+    {
+      key: "/",
+      action: () => {
+        if (originInputRef.current) {
+          originInputRef.current.click();
+        }
+      },
+    },
+    {
+      key: "Escape",
+      action: () => {
+        setShowShortcuts(false);
+        (document.activeElement as HTMLElement)?.blur();
+      },
+    },
+    {
+      key: "?",
+      shift: true,
+      action: () => setShowShortcuts(true),
+    },
+    {
+      key: "f",
+      action: () => {
+        if (hasResults) {
+          // Toggle filter panel on mobile (click the filter button)
+          // Look for the Sheet trigger button that contains "Filters"
+          const filterButtons = Array.from(document.querySelectorAll('button'));
+          const filterButton = filterButtons.find(btn => {
+            const text = btn.textContent || '';
+            return text.includes('Filters') && btn.closest('[class*="lg:hidden"]');
+          });
+          if (filterButton instanceof HTMLElement) {
+            filterButton.click();
+          }
+        }
+      },
+    },
+    {
+      key: "s",
+      action: () => {
+        if (hasResults) {
+          navigator.clipboard.writeText(window.location.href).then(() => {
+            // Show brief feedback (you could add a toast here)
+            console.log("URL copied to clipboard");
+          });
+        }
+      },
+    },
+    {
+      key: "k",
+      meta: true,
+      action: () => {
+        if (originInputRef.current) {
+          originInputRef.current.click();
+        }
+      },
+    },
+  ]);
+
   return (
     <motion.main
       initial={{ opacity: 0 }}
@@ -112,6 +178,14 @@ export default function Home() {
             />
             <span className="font-bold text-xl text-gray-900">SkyPulse</span>
           </div>
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+            title="Keyboard shortcuts (Shift+?)"
+            aria-label="Show keyboard shortcuts"
+          >
+            <span className="text-sm font-mono font-semibold">?</span>
+          </button>
         </div>
       </header>
 
@@ -155,7 +229,7 @@ export default function Home() {
                 "transition-all duration-300",
                 hasResults ? "animate-slide-down" : ""
               )}>
-                <SearchForm />
+                <SearchForm originInputRef={originInputRef} />
               </div>
             )}
           </div>
@@ -224,6 +298,12 @@ export default function Home() {
           </nav>
         </div>
       </footer>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </motion.main>
   );
 }

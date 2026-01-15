@@ -13,7 +13,11 @@ import { useRecentSearches, RecentSearch } from '@/hooks/useRecentSearches';
 import { cn } from '@/lib/utils';
 import { format, addDays } from 'date-fns';
 
-export function SearchForm() {
+interface SearchFormProps {
+  originInputRef?: React.RefObject<HTMLButtonElement | null>;
+}
+
+export function SearchForm({ originInputRef }: SearchFormProps) {
   const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary } = useSearchStore();
   const { addSearch, searches } = useRecentSearches();
   const [isSearching, setIsSearching] = useState(false);
@@ -239,6 +243,7 @@ export function SearchForm() {
           }}
         >
           <AirportSelect
+            ref={originInputRef}
             value={searchParams.origin}
             onChange={(airport) => {
               setSearchParams({ origin: airport });

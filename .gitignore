@@ -44,4 +44,4 @@ next-env.d.ts
 *.md
 
 # scripts
-verify-project.sh
+.sh

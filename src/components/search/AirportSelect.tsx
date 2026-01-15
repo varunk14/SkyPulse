@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ interface AirportSelectProps {
   icon?: 'departure' | 'arrival';
 }
 
-export function AirportSelect({ value, onChange, placeholder, icon = 'departure' }: AirportSelectProps) {
+export const AirportSelect = React.forwardRef<HTMLButtonElement, AirportSelectProps>(
+  ({ value, onChange, placeholder, icon = 'departure' }, ref) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [airports, setAirports] = useState<Airport[]>([]);
@@ -64,12 +65,13 @@ export function AirportSelect({ value, onChange, placeholder, icon = 'departure'
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={ref}
           variant="outline"
           role="combobox"
           aria-expanded={open}
           aria-label={ariaLabel}
           className={cn(
-            "w-full justify-start text-left font-normal h-14 px-4",
+            "w-full justify-start text-left font-normal h-14 px-4 relative",
             "bg-white hover:bg-gray-50 border-gray-200",
             "transition-all duration-200",
             !value && "text-gray-500"
@@ -82,7 +84,7 @@ export function AirportSelect({ value, onChange, placeholder, icon = 'departure'
             )}
             aria-hidden="true"
           />
-          <div className="flex flex-col items-start overflow-hidden">
+          <div className="flex flex-col items-start overflow-hidden flex-1">
             {value ? (
               <>
                 <span className="font-semibold text-gray-900 truncate">
@@ -96,6 +98,11 @@ export function AirportSelect({ value, onChange, placeholder, icon = 'departure'
               <span className="text-gray-500">{placeholder}</span>
             )}
           </div>
+          {icon === 'departure' && !value && (
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-400 font-mono">
+              /
+            </kbd>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[340px] p-0" align="start" sideOffset={4} collisionPadding={8}>
@@ -144,4 +151,6 @@ export function AirportSelect({ value, onChange, placeholder, icon = 'departure'
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+AirportSelect.displayName = "AirportSelect";

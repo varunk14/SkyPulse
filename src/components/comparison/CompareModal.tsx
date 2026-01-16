@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Plane, Clock, DollarSign, Loader2 } from "lucide-react";
+import { X, Check, Plane, Clock, DollarSign } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
-import { parseDuration, formatTime, getStopsCount, formatDate } from "@/lib/formatters";
+import { useBookingStore } from "@/store/bookingStore";
+import { parseDuration, formatTime, getStopsCount } from "@/lib/formatters";
 import { formatPrice } from "@/lib/currency";
-import { BookingSuccessModal } from "@/components/BookingSuccessModal";
+import { BookingWizard } from "@/components/booking/BookingWizard";
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface Props {
 
 export function CompareModal({ isOpen, onClose }: Props) {
   const { compareFlights, clearCompare, removeFromCompare, selectedCurrency } = useSearchStore();
+  const { setSelectedFlight } = useBookingStore();
+  const [showWizard, setShowWizard] = useState(false);
   const flightCount = compareFlights.length;
 
   // Dynamic grid columns based on flight count (for desktop only)
@@ -39,31 +42,18 @@ export function CompareModal({ isOpen, onClose }: Props) {
   const stops = compareFlights.map(getStops);
   const bestStops = Math.min(...stops);
 
-  const [bookingFlightId, setBookingFlightId] = useState<string | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any>(null);
+  const handleSelectFlight = (flight: typeof compareFlights[0]) => {
+    // Set the selected flight in the booking store
+    setSelectedFlight(flight);
+    // Open the booking wizard
+    setShowWizard(true);
+  };
 
-  const handleSelectFlight = async (flight: typeof compareFlights[0]) => {
-    // Show loading state
-    setBookingFlightId(flight.id);
-    
-    // Simulate booking
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Prepare booking details
-    const outbound = flight.itineraries[0];
-    const bookingDetails = {
-      bookingReference: 'SP' + Math.random().toString(36).slice(2, 8).toUpperCase(),
-      origin: outbound.segments[0].departure.iataCode,
-      destination: outbound.segments[outbound.segments.length - 1].arrival.iataCode,
-      departureDate: formatDate(outbound.segments[0].departure.at),
-      totalPrice: formatPrice(parseFloat(flight.price.grandTotal), selectedCurrency)
-    };
-    
-    setBookingFlightId(null);
-    setSelectedBookingDetails(bookingDetails);
-    setShowSuccessModal(true);
-    // DON'T close or clear here - let it happen when success modal closes
+  const handleWizardClose = () => {
+    setShowWizard(false);
+    // Clear compare selections and close modal when wizard closes
+    clearCompare();
+    onClose();
   };
 
   // Helper to get flight index for best value checks
@@ -214,24 +204,12 @@ export function CompareModal({ isOpen, onClose }: Props) {
 
                           {/* Select button - full width */}
                           <motion.button
-                            whileHover={{ scale: bookingFlightId === flight.id ? 1 : 1.02 }}
-                            whileTap={{ scale: bookingFlightId === flight.id ? 1 : 0.98 }}
-                            disabled={bookingFlightId === flight.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => handleSelectFlight(flight)}
-                            className={`w-full h-12 text-base font-semibold rounded-xl transition-colors ${
-                              bookingFlightId === flight.id
-                                ? "bg-brand-400 text-white cursor-wait"
-                                : "bg-brand-500 hover:bg-brand-600 text-white"
-                            }`}
+                            className="w-full h-12 text-base font-semibold rounded-xl transition-colors bg-brand-500 hover:bg-brand-600 text-white"
                           >
-                            {bookingFlightId === flight.id ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Processing...
-                              </span>
-                            ) : (
-                              'Select Flight'
-                            )}
+                            Select Flight
                           </motion.button>
                         </div>
                       </div>
@@ -373,24 +351,12 @@ export function CompareModal({ isOpen, onClose }: Props) {
                     {compareFlights.map((flight) => (
                       <motion.button
                         key={flight.id}
-                        whileHover={{ scale: bookingFlightId === flight.id ? 1 : 1.02 }}
-                        whileTap={{ scale: bookingFlightId === flight.id ? 1 : 0.98 }}
-                        disabled={bookingFlightId === flight.id}
-                        className={`py-3 font-semibold rounded-xl transition-colors ${
-                          bookingFlightId === flight.id
-                            ? "bg-brand-400 text-white cursor-wait"
-                            : "bg-brand-500 hover:bg-brand-600 text-white"
-                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="py-3 font-semibold rounded-xl transition-colors bg-brand-500 hover:bg-brand-600 text-white"
                         onClick={() => handleSelectFlight(flight)}
                       >
-                        {bookingFlightId === flight.id ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Processing...
-                          </span>
-                        ) : (
-                          'Select Flight'
-                        )}
+                        Select Flight
                       </motion.button>
                     ))}
                   </div>
@@ -399,16 +365,10 @@ export function CompareModal({ isOpen, onClose }: Props) {
             </div>
           </motion.div>
 
-          {/* Booking Success Modal */}
-          <BookingSuccessModal
-            isOpen={showSuccessModal}
-            onClose={() => {
-              setShowSuccessModal(false);
-              setSelectedBookingDetails(null);
-              clearCompare(); // Clear selections when user closes success modal
-              onClose(); // Close comparison modal when user closes success modal
-            }}
-            bookingDetails={selectedBookingDetails}
+          {/* Booking Wizard */}
+          <BookingWizard
+            isOpen={showWizard}
+            onClose={handleWizardClose}
           />
         </>
       )}

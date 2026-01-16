@@ -17,7 +17,6 @@ A feature-rich flight search application built with Next.js 16, TypeScript, and 
 ### Advanced Filtering
 - 🎯 Filter by stops (Nonstop, 1 Stop, 2+ Stops)
 - 💰 Interactive price range slider
-- ✈️ Multi-airline selection
 - ⏰ Departure time ranges
 - ⏱️ Duration filters with real-time updates
 

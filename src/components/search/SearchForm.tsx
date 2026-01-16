@@ -27,22 +27,22 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
   // Show recent searches when origin button is clicked
   useEffect(() => {
     const handleOriginClick = (event: MouseEvent) => {
-      if (originInputRef.current && originInputRef.current.contains(event.target as Node)) {
+      if (originInputRef?.current && originInputRef.current.contains(event.target as Node)) {
         if (searches.length > 0) {
           setShowRecent(true);
         }
       }
     };
 
-    if (originInputRef.current) {
+    if (originInputRef?.current) {
       originInputRef.current.addEventListener('click', handleOriginClick);
       return () => {
-        if (originInputRef.current) {
+        if (originInputRef?.current) {
           originInputRef.current.removeEventListener('click', handleOriginClick);
         }
       };
     }
-  }, [searches.length]);
+  }, [originInputRef, searches.length]);
 
   // Close recent searches when clicking outside
   useEffect(() => {

@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlightCard } from './FlightCard';
 import { SortDropdown, type SortOption } from './SortDropdown';
-import { FlightResultsSkeleton } from '@/components/shared/FlightCardSkeleton';
+import { FlightListSkeleton } from './FlightCardSkeleton';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { useSearchStore } from '@/store/searchStore';
 import { useRecentSearches, RecentSearch } from '@/hooks/useRecentSearches';
@@ -127,7 +127,7 @@ export function FlightList() {
 
   // Loading state
   if (isLoading) {
-    return <FlightResultsSkeleton />;
+    return <FlightListSkeleton count={8} />;
   }
 
   // Error state

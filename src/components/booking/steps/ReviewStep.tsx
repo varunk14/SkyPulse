@@ -6,6 +6,20 @@ import { Button } from '@/components/ui/button';
 import { useBookingStore } from '@/store/bookingStore';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 import { formatPrice, formatDate } from '@/lib/formatters';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the map component with SSR disabled
+const InteractiveFlightMap = dynamic(
+  () => import('@/components/map/InteractiveFlightMap').then(mod => ({ default: mod.InteractiveFlightMap })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
+        <div className="text-gray-500">Loading map...</div>
+      </div>
+    )
+  }
+);
 
 interface ReviewStepProps {
   onComplete?: () => void;
@@ -57,21 +71,35 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
         <div className="border rounded-xl p-6 space-y-4">
           <h4 className="font-semibold">Flight Details</h4>
           {selectedFlight && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Route</span>
-                <span className="font-medium">
-                  {selectedFlight.itineraries[0].segments[0].departure.iataCode} → {' '}
-                  {selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.iataCode}
-                </span>
+            <>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Route</span>
+                  <span className="font-medium">
+                    {selectedFlight.itineraries[0].segments[0].departure.iataCode} → {' '}
+                    {selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.iataCode}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Departure</span>
+                  <span className="font-medium">
+                    {formatDate(selectedFlight.itineraries[0].segments[0].departure.at)}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Departure</span>
-                <span className="font-medium">
-                  {formatDate(selectedFlight.itineraries[0].segments[0].departure.at)}
-                </span>
+              
+              {/* Interactive Flight Route Map */}
+              <div className="mt-4">
+                <InteractiveFlightMap
+                  origin={selectedFlight.itineraries[0].segments[0].departure.iataCode}
+                  destination={selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.iataCode}
+                  stops={selectedFlight.itineraries[0].segments.length > 1 
+                    ? selectedFlight.itineraries[0].segments.slice(0, -1).map(s => s.arrival.iataCode)
+                    : []
+                  }
+                />
               </div>
-            </div>
+            </>
           )}
         </div>
 

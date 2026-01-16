@@ -24,6 +24,26 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
   const [showRecent, setShowRecent] = useState(false);
   const originRef = useRef<HTMLDivElement>(null);
 
+  // Show recent searches when origin button is clicked
+  useEffect(() => {
+    const handleOriginClick = (event: MouseEvent) => {
+      if (originInputRef.current && originInputRef.current.contains(event.target as Node)) {
+        if (searches.length > 0) {
+          setShowRecent(true);
+        }
+      }
+    };
+
+    if (originInputRef.current) {
+      originInputRef.current.addEventListener('click', handleOriginClick);
+      return () => {
+        if (originInputRef.current) {
+          originInputRef.current.removeEventListener('click', handleOriginClick);
+        }
+      };
+    }
+  }, [searches.length]);
+
   // Close recent searches when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,36 +67,133 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
     });
   };
 
-  const handleRecentSelect = (search: RecentSearch) => {
-    // Find airports by IATA code
-    const loadAirportsFromRecent = async () => {
-      try {
-        const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
-        const [originRes, destRes] = await Promise.all([
-          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}&useMock=${useMock}`),
-          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}&useMock=${useMock}`)
-        ]);
+  const performSearch = async (origin: any, destination: any, departureDate?: Date | null) => {
+    const dateToUse = departureDate || searchParams.departureDate;
+    
+    // Validation
+    if (!origin || !destination || !dateToUse) {
+      setError('Please fill in all required fields');
+      return;
+    }
 
-        const originData = await originRes.json();
-        const destData = await destRes.json();
+    setIsSearching(true);
+    setIsLoading(true);
+    setError(null);
 
-        // Find exact match by IATA code
-        const originAirport = originData.data?.find((a: any) => a.iataCode === search.from.code);
-        const destAirport = destData.data?.find((a: any) => a.iataCode === search.to.code);
+    try {
+      const params = new URLSearchParams({
+        origin: origin.iataCode,
+        destination: destination.iataCode,
+        departureDate: format(dateToUse, 'yyyy-MM-dd'),
+        adults: searchParams.passengers.adults.toString(),
+      });
 
-        if (originAirport && destAirport) {
-          setSearchParams({
-            origin: originAirport,
-            destination: destAirport,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to load airports from recent search:', error);
+      if (searchParams.returnDate && searchParams.tripType === 'roundTrip') {
+        params.append('returnDate', format(searchParams.returnDate, 'yyyy-MM-dd'));
       }
-    };
+      if (searchParams.passengers.children > 0) {
+        params.append('children', searchParams.passengers.children.toString());
+      }
+      if (searchParams.passengers.infants > 0) {
+        params.append('infants', searchParams.passengers.infants.toString());
+      }
+      if (searchParams.cabinClass !== 'ECONOMY') {
+        params.append('cabinClass', searchParams.cabinClass);
+      }
 
-    loadAirportsFromRecent();
+      const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
+      params.append('useMock', String(useMock));
+
+      const response = await fetch(`/api/flights/search?${params}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Search failed');
+      }
+
+      setFlights(data.data || []);
+      setAirlinesDictionary(data.dictionaries?.carriers || {});
+      
+      // Save to recent searches
+      if (origin && destination && dateToUse) {
+        addSearch({
+          from: { code: origin.iataCode, city: origin.cityName },
+          to: { code: destination.iataCode, city: destination.cityName },
+          date: format(dateToUse, "MMM dd"),
+        });
+      }
+      
+      // Update URL with search parameters
+      const url = new URL(window.location.href);
+      url.searchParams.set("from", origin.iataCode);
+      url.searchParams.set("to", destination.iataCode);
+      url.searchParams.set("departure", format(dateToUse, 'yyyy-MM-dd'));
+      
+      if (searchParams.returnDate && searchParams.tripType === 'roundTrip') {
+        url.searchParams.set("return", format(searchParams.returnDate, 'yyyy-MM-dd'));
+      } else {
+        url.searchParams.delete("return");
+      }
+      
+      url.searchParams.set("passengers", String(searchParams.passengers?.adults || 1));
+      
+      if (searchParams.passengers.children > 0) {
+        url.searchParams.set("children", String(searchParams.passengers.children));
+      } else {
+        url.searchParams.delete("children");
+      }
+      
+      if (searchParams.passengers.infants > 0) {
+        url.searchParams.set("infants", String(searchParams.passengers.infants));
+      } else {
+        url.searchParams.delete("infants");
+      }
+      
+      url.searchParams.set("class", searchParams.cabinClass || "ECONOMY");
+      url.searchParams.set("tripType", searchParams.tripType || "roundTrip");
+      
+      window.history.replaceState({}, "", url.toString());
+    } catch (error: any) {
+      setError(error.message);
+      setFlights([]);
+    } finally {
+      setIsSearching(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleRecentSelect = async (search: RecentSearch) => {
+    // Close dropdown immediately
     setShowRecent(false);
+    
+    // Find airports by IATA code
+    try {
+      const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
+      const [originRes, destRes] = await Promise.all([
+        fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}&useMock=${useMock}`),
+        fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}&useMock=${useMock}`)
+      ]);
+
+      const originData = await originRes.json();
+      const destData = await destRes.json();
+
+      // Find exact match by IATA code
+      const originAirport = originData.data?.find((a: any) => a.iataCode === search.from.code);
+      const destAirport = destData.data?.find((a: any) => a.iataCode === search.to.code);
+
+      if (originAirport && destAirport) {
+        // Set search parameters
+        setSearchParams({
+          origin: originAirport,
+          destination: destAirport,
+        });
+        
+        // Trigger search automatically with the new airports
+        await performSearch(originAirport, destAirport, searchParams.departureDate);
+      }
+    } catch (error) {
+      console.error('Failed to load airports from recent search:', error);
+    }
   };
 
   const updateURLWithSearch = () => {
@@ -116,68 +233,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
   };
 
   const handleSearch = async () => {
-    // Validation
-    if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    setIsSearching(true);
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        origin: searchParams.origin.iataCode,
-        destination: searchParams.destination.iataCode,
-        departureDate: format(searchParams.departureDate, 'yyyy-MM-dd'),
-        adults: searchParams.passengers.adults.toString(),
-      });
-
-      if (searchParams.returnDate && searchParams.tripType === 'roundTrip') {
-        params.append('returnDate', format(searchParams.returnDate, 'yyyy-MM-dd'));
-      }
-      if (searchParams.passengers.children > 0) {
-        params.append('children', searchParams.passengers.children.toString());
-      }
-      if (searchParams.passengers.infants > 0) {
-        params.append('infants', searchParams.passengers.infants.toString());
-      }
-      if (searchParams.cabinClass !== 'ECONOMY') {
-        params.append('cabinClass', searchParams.cabinClass);
-      }
-
-      const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
-      params.append('useMock', String(useMock));
-
-      const response = await fetch(`/api/flights/search?${params}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Search failed');
-      }
-
-      setFlights(data.data || []);
-      setAirlinesDictionary(data.dictionaries?.carriers || {});
-      
-      // Save to recent searches
-      if (searchParams.origin && searchParams.destination && searchParams.departureDate) {
-        addSearch({
-          from: { code: searchParams.origin.iataCode, city: searchParams.origin.cityName },
-          to: { code: searchParams.destination.iataCode, city: searchParams.destination.cityName },
-          date: format(searchParams.departureDate, "MMM dd"),
-        });
-      }
-      
-      // Update URL with search parameters
-      updateURLWithSearch();
-    } catch (error: any) {
-      setError(error.message);
-      setFlights([]);
-    } finally {
-      setIsSearching(false);
-      setIsLoading(false);
-    }
+    await performSearch(searchParams.origin, searchParams.destination, searchParams.departureDate);
   };
 
   const tripTypes = [
@@ -240,11 +296,6 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         <div 
           ref={originRef}
           className="lg:col-span-3 relative"
-          onClick={() => {
-            if (searches.length > 0) {
-              setShowRecent(true);
-            }
-          }}
         >
           <AirportSelect
             ref={originInputRef}

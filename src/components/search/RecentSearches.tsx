@@ -40,7 +40,11 @@ export function RecentSearches({ onSelect, isVisible }: Props) {
         {searches.map((search) => (
           <motion.button
             key={search.id}
-            onClick={() => onSelect(search)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSelect(search);
+            }}
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             whileHover={{ x: 4 }}
           >

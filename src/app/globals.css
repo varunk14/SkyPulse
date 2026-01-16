@@ -1,5 +1,26 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
+/* Fix Leaflet map tiles visibility */
+.leaflet-container {
+  background: #e5e7eb !important;
+  z-index: 0;
+}
+
+.leaflet-tile-pane {
+  z-index: 2 !important;
+}
+
+.leaflet-tile {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.leaflet-map-wrapper .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 

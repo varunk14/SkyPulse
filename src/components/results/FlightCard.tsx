@@ -18,7 +18,7 @@ import {
   getAirlineLogo,
   isNextDay,
 } from '@/lib/formatters';
-import { FlightRouteMap } from '@/components/map/FlightRouteMap';
+import { InteractiveFlightMap } from '@/components/map/InteractiveFlightMap';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 import { BookingWizard } from '@/components/booking/BookingWizard';
 import { useBookingStore } from '@/store/bookingStore';
@@ -395,7 +395,7 @@ function FlightDetails({ flight, airlineNames, onBooking }: FlightDetailsProps) 
 
             {/* Flight Route Map */}
             <div className="border-t pt-4 mt-4">
-              <FlightRouteMap
+              <InteractiveFlightMap
                 origin={origin}
                 destination={destination}
                 stops={stops}

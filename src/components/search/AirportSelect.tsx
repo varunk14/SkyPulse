@@ -100,7 +100,9 @@ export const AirportSelect = React.forwardRef<HTMLButtonElement, AirportSelectPr
                 </span>
               </>
             ) : (
-              <span className="text-gray-500">{placeholder}</span>
+              <span className="text-gray-500">
+                {placeholder} <span className="text-red-500">*</span>
+              </span>
             )}
           </div>
           {icon === 'departure' && !value && (

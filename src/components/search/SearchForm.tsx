@@ -191,6 +191,18 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
   };
 
   const handleSearch = async () => {
+    // Validate required fields
+    if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
+      setError('Please select origin, destination, and departure date');
+      return;
+    }
+    
+    // Validate return date for round trip
+    if (searchParams.tripType === 'roundTrip' && !searchParams.returnDate) {
+      setError('Please select return date for round trip');
+      return;
+    }
+    
     await performSearch(searchParams.origin, searchParams.destination, searchParams.departureDate);
   };
 
@@ -305,6 +317,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
             }}
             placeholder="Departure"
             minDate={new Date()}
+            required={true}
           />
         </div>
 
@@ -316,6 +329,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
             placeholder="Return"
             minDate={searchParams.departureDate || new Date()}
             disabled={searchParams.tripType === 'oneWay'}
+            required={searchParams.tripType === 'roundTrip'}
           />
         </div>
 
@@ -344,13 +358,21 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         >
           <Button
             onClick={handleSearch}
-            disabled={isSearching}
+            disabled={
+              isSearching || 
+              !searchParams.origin || 
+              !searchParams.destination || 
+              !searchParams.departureDate ||
+              (searchParams.tripType === 'roundTrip' && !searchParams.returnDate)
+            }
             className={cn(
               "w-full sm:min-w-[200px] h-14",
               "bg-brand-600 hover:bg-brand-700 text-white",
               "font-semibold text-base",
               "transition-all duration-200",
-              "shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/30"
+              "shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/30",
+              // Add disabled styles
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-600 disabled:shadow-none"
             )}
           >
             {isSearching ? (
@@ -365,6 +387,17 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
               </>
             )}
           </Button>
+          {(!searchParams.origin || !searchParams.destination || !searchParams.departureDate || (searchParams.tripType === 'roundTrip' && !searchParams.returnDate)) && (
+            <p className="text-xs text-gray-500 text-center sm:text-left mt-2">
+              {!searchParams.origin && !searchParams.destination && !searchParams.departureDate
+                ? "Please select origin, destination, and dates to search"
+                : !searchParams.departureDate
+                ? "Please select departure date"
+                : searchParams.tripType === 'roundTrip' && !searchParams.returnDate
+                ? "Please select return date for round trip"
+                : "Please complete all required fields"}
+            </p>
+          )}
         </motion.div>
       </div>
     </motion.div>

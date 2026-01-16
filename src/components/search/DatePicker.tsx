@@ -14,9 +14,10 @@ interface DatePickerProps {
   placeholder: string;
   minDate?: Date;
   disabled?: boolean;
+  required?: boolean;
 }
 
-export function DatePicker({ value, onChange, placeholder, minDate, disabled }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder, minDate, disabled, required = false }: DatePickerProps) {
   const [open, setOpen] = useState(false);
 
   const ariaLabel = value 
@@ -55,7 +56,9 @@ export function DatePicker({ value, onChange, placeholder, minDate, disabled }: 
                 </span>
               </>
             ) : (
-              <span className="text-gray-500">{placeholder}</span>
+              <span className="text-gray-500">
+                {placeholder}{required && <span className="text-red-500"> *</span>}
+              </span>
             )}
           </div>
         </Button>

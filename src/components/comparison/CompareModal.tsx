@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function CompareModal({ isOpen, onClose }: Props) {
-  const { compareFlights } = useSearchStore();
+  const { compareFlights, clearCompare } = useSearchStore();
   const flightCount = compareFlights.length;
 
   // Dynamic grid columns based on flight count
@@ -62,7 +62,7 @@ export function CompareModal({ isOpen, onClose }: Props) {
     setBookingFlightId(null);
     setSelectedBookingDetails(bookingDetails);
     setShowSuccessModal(true);
-    // Don't close comparison modal yet - let user see the confetti!
+    // DON'T close or clear here - let it happen when success modal closes
   };
 
   return (
@@ -252,7 +252,8 @@ export function CompareModal({ isOpen, onClose }: Props) {
             onClose={() => {
               setShowSuccessModal(false);
               setSelectedBookingDetails(null);
-              onClose(); // Now close the comparison modal too
+              clearCompare(); // Clear selections when user closes success modal
+              onClose(); // Close comparison modal when user closes success modal
             }}
             bookingDetails={selectedBookingDetails}
           />

@@ -36,16 +36,32 @@ export const AirlineFilter = memo(function AirlineFilter() {
   const handleChange = useCallback((code: string, checked: boolean) => {
     setFilters((prevFilters) => {
       const currentAirlines = prevFilters.airlines;
+      
       if (currentAirlines.length === 0) {
-        // If none selected (all shown), selecting one means filtering to just that one
-        return { airlines: checked ? [code] : [] };
+        // If no filter active (all airlines shown), clicking to uncheck one means:
+        // "Show all EXCEPT this one" = add all other airlines to filter
+        if (!checked) {
+          // Get all airline codes except the one being unchecked
+          const allAirlineCodes = flights.map(f => f.validatingAirlineCodes[0]);
+          const uniqueCodes = [...new Set(allAirlineCodes)];
+          return { airlines: uniqueCodes.filter(c => c !== code) };
+        }
+        // If checking (shouldn't happen when all shown, but handle it)
+        return { airlines: [] };
       }
-      const newAirlines = checked
-        ? [...currentAirlines, code]
-        : currentAirlines.filter((c) => c !== code);
-      return { airlines: newAirlines };
+      
+      // Normal case: filter is active
+      if (checked) {
+        // Adding airline back to filter
+        return { airlines: [...currentAirlines, code] };
+      } else {
+        // Removing airline from filter
+        const newAirlines = currentAirlines.filter((c) => c !== code);
+        // If removing last one, reset to show all
+        return { airlines: newAirlines };
+      }
     });
-  }, [setFilters]);
+  }, [setFilters, flights]);
 
   const selectAll = useCallback(() => {
     setFilters({ airlines: [] });

@@ -2,7 +2,7 @@
 
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Plane, Clock, Briefcase, Check, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plane, Clock, Briefcase, Check, Plus, Loader2 } from 'lucide-react';
 import { FlightOffer } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,7 @@ export const FlightCard = memo(function FlightCard({
 }: FlightCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
   const { compareFlights, addToCompare, removeFromCompare } = useSearchStore();
   const isInCompare = compareFlights.some((f) => f.id === flight.id);
   
@@ -57,15 +58,21 @@ export const FlightCard = memo(function FlightCard({
   const mainCarrier = flight.validatingAirlineCodes[0];
   const airlineName = airlineNames[mainCarrier] || mainCarrier;
 
-  const handleBooking = () => {
-    // Simulate booking process
-    // In real app, this would call your booking API
+  const handleBooking = async () => {
+    // Show loading state
+    setIsBooking(true);
+    
+    // Simulate API call (1 second delay)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Show success modal
+    setIsBooking(false);
     setShowBookingModal(true);
   };
 
   // Prepare booking details for the modal
   const bookingDetails = {
-    bookingReference: 'SK' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    bookingReference: 'SP' + Math.random().toString(36).slice(2, 8).toUpperCase(),
     origin: outbound.segments[0].departure.iataCode,
     destination: outbound.segments[outbound.segments.length - 1].arrival.iataCode,
     departureDate: formatDate(outbound.segments[0].departure.at),
@@ -222,6 +229,7 @@ export const FlightCard = memo(function FlightCard({
                 flight={flight}
                 airlineNames={airlineNames}
                 onBooking={handleBooking}
+                isBooking={isBooking}
               />
             </div>
           </motion.div>
@@ -325,9 +333,10 @@ interface FlightDetailsProps {
   flight: FlightOffer;
   airlineNames: Record<string, string>;
   onBooking?: () => void;
+  isBooking?: boolean;
 }
 
-function FlightDetails({ flight, airlineNames, onBooking }: FlightDetailsProps) {
+function FlightDetails({ flight, airlineNames, onBooking, isBooking = false }: FlightDetailsProps) {
   return (
     <div className="pt-4 space-y-6">
       {flight.itineraries.map((itinerary, itinIndex) => {
@@ -423,9 +432,17 @@ function FlightDetails({ flight, airlineNames, onBooking }: FlightDetailsProps) 
         </div>
         <Button 
           onClick={onBooking || (() => {})}
-          className="bg-brand-600 hover:bg-brand-700 text-white"
+          disabled={isBooking || !onBooking}
+          className="bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Book Now
+          {isBooking ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Select Flight'
+          )}
         </Button>
       </div>
     </div>

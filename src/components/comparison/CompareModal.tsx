@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Plane, Clock, DollarSign } from "lucide-react";
+import { X, Check, Plane, Clock, DollarSign, Loader2 } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
-import { parseDuration, formatPrice, formatTime, getStopsCount } from "@/lib/formatters";
+import { parseDuration, formatPrice, formatTime, getStopsCount, formatDate } from "@/lib/formatters";
+import { BookingSuccessModal } from "@/components/BookingSuccessModal";
 
 interface Props {
   isOpen: boolean;
@@ -35,6 +37,33 @@ export function CompareModal({ isOpen, onClose }: Props) {
   };
   const stops = compareFlights.map(getStops);
   const bestStops = Math.min(...stops);
+
+  const [bookingFlightId, setBookingFlightId] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any>(null);
+
+  const handleSelectFlight = async (flight: typeof compareFlights[0]) => {
+    // Show loading state
+    setBookingFlightId(flight.id);
+    
+    // Simulate booking
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Prepare booking details
+    const outbound = flight.itineraries[0];
+    const bookingDetails = {
+      bookingReference: 'SP' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      origin: outbound.segments[0].departure.iataCode,
+      destination: outbound.segments[outbound.segments.length - 1].arrival.iataCode,
+      departureDate: formatDate(outbound.segments[0].departure.at),
+      totalPrice: formatPrice(flight.price.grandTotal, flight.price.currency)
+    };
+    
+    setBookingFlightId(null);
+    setSelectedBookingDetails(bookingDetails);
+    setShowSuccessModal(true);
+    // Don't close comparison modal yet - let user see the confetti!
+  };
 
   return (
     <AnimatePresence>
@@ -192,22 +221,41 @@ export function CompareModal({ isOpen, onClose }: Props) {
                   {compareFlights.map((flight) => (
                     <motion.button
                       key={flight.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors"
-                      onClick={() => {
-                        // TODO: Handle flight selection
-                        console.log("Selected flight:", flight.id);
-                        onClose();
-                      }}
+                      whileHover={{ scale: bookingFlightId === flight.id ? 1 : 1.02 }}
+                      whileTap={{ scale: bookingFlightId === flight.id ? 1 : 0.98 }}
+                      disabled={bookingFlightId === flight.id}
+                      className={`py-3 font-semibold rounded-xl transition-colors ${
+                        bookingFlightId === flight.id
+                          ? "bg-brand-400 text-white cursor-wait"
+                          : "bg-brand-500 hover:bg-brand-600 text-white"
+                      }`}
+                      onClick={() => handleSelectFlight(flight)}
                     >
-                      Select Flight
+                      {bookingFlightId === flight.id ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        'Select Flight'
+                      )}
                     </motion.button>
                   ))}
                 </div>
               </div>
             </div>
           </motion.div>
+
+          {/* Booking Success Modal */}
+          <BookingSuccessModal
+            isOpen={showSuccessModal}
+            onClose={() => {
+              setShowSuccessModal(false);
+              setSelectedBookingDetails(null);
+              onClose(); // Now close the comparison modal too
+            }}
+            bookingDetails={selectedBookingDetails}
+          />
         </>
       )}
     </AnimatePresence>

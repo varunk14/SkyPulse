@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { CheckCircle2, Download, Mail, Calendar } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { triggerBookingConfetti } from '@/lib/confetti';
 
 interface BookingSuccessModalProps {
@@ -69,22 +68,6 @@ export function BookingSuccessModal({ isOpen, onClose, bookingDetails }: Booking
               📧 Confirmation email sent to your inbox
             </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Mail className="h-4 w-4" />
-              Email
-            </Button>
-          </div>
-
-          <Button onClick={onClose} className="w-full gap-2" size="lg">
-            <Calendar className="h-4 w-4" />
-            View My Trips
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

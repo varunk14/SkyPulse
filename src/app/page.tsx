@@ -7,6 +7,7 @@ import { SearchSummary } from '@/components/search/SearchSummary';
 import { FlightList } from '@/components/results/FlightList';
 import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
+import { PricePredictionBanner } from '@/components/results/PricePredictionBanner';
 import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal';
 import { CompareBar } from '@/components/comparison/CompareBar';
 import { MockDataToggle } from '@/components/MockDataToggle';
@@ -14,12 +15,17 @@ import { useSearchStore } from '@/store/searchStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
 import { Airport } from '@/types';
-import { parseISO } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 
 export default function Home() {
   const { flights, searchParams, setSearchParams } = useSearchStore();
   const hasResults = flights.length > 0;
   const hasSearched = searchParams.origin && searchParams.destination;
+
+  // Calculate average price for price prediction
+  const averagePrice = hasResults && flights.length > 0
+    ? flights.reduce((sum, flight) => sum + parseFloat(flight.price.grandTotal), 0) / flights.length
+    : 0;
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [urlParamsLoaded, setUrlParamsLoaded] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -273,6 +279,19 @@ export default function Home() {
                 <div className="mb-6">
                   <PriceGraph />
                 </div>
+
+                {/* Price Prediction Banner */}
+                {searchParams.departureDate && searchParams.origin && searchParams.destination && (
+                  <PricePredictionBanner
+                    departureDate={format(searchParams.departureDate, 'yyyy-MM-dd')}
+                    averagePrice={averagePrice}
+                    searchParams={{
+                      origin: searchParams.origin.iataCode,
+                      destination: searchParams.destination.iataCode,
+                      isRoundTrip: !!searchParams.returnDate
+                    }}
+                  />
+                )}
 
                 {/* Filter + Results Layout */}
                 <div className="flex flex-col lg:flex-row gap-6">

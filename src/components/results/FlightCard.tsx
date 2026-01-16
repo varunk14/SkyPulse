@@ -12,12 +12,14 @@ import {
   formatTime,
   formatIsoDuration,
   formatPrice,
+  formatDate,
   getStopsCount,
   getStopsLabel,
   getAirlineLogo,
   isNextDay,
 } from '@/lib/formatters';
 import { FlightRouteMap } from '@/components/map/FlightRouteMap';
+import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 
 // Badge pop animation variant
 const badgeVariants = {
@@ -44,6 +46,7 @@ export const FlightCard = memo(function FlightCard({
   isFastest,
 }: FlightCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const { compareFlights, addToCompare, removeFromCompare } = useSearchStore();
   const isInCompare = compareFlights.some((f) => f.id === flight.id);
   
@@ -53,6 +56,21 @@ export const FlightCard = memo(function FlightCard({
   const currency = flight.price.currency;
   const mainCarrier = flight.validatingAirlineCodes[0];
   const airlineName = airlineNames[mainCarrier] || mainCarrier;
+
+  const handleBooking = () => {
+    // Simulate booking process
+    // In real app, this would call your booking API
+    setShowBookingModal(true);
+  };
+
+  // Prepare booking details for the modal
+  const bookingDetails = {
+    bookingReference: 'SK' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    origin: outbound.segments[0].departure.iataCode,
+    destination: outbound.segments[outbound.segments.length - 1].arrival.iataCode,
+    departureDate: formatDate(outbound.segments[0].departure.at),
+    totalPrice: formatPrice(price, currency),
+  };
 
   return (
     <motion.div
@@ -203,11 +221,19 @@ export const FlightCard = memo(function FlightCard({
               <FlightDetails
                 flight={flight}
                 airlineNames={airlineNames}
+                onBooking={handleBooking}
               />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Booking Success Modal */}
+      <BookingSuccessModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        bookingDetails={bookingDetails}
+      />
     </motion.div>
   );
 });
@@ -298,9 +324,10 @@ function FlightTimeline({ itinerary }: FlightTimelineProps) {
 interface FlightDetailsProps {
   flight: FlightOffer;
   airlineNames: Record<string, string>;
+  onBooking?: () => void;
 }
 
-function FlightDetails({ flight, airlineNames }: FlightDetailsProps) {
+function FlightDetails({ flight, airlineNames, onBooking }: FlightDetailsProps) {
   return (
     <div className="pt-4 space-y-6">
       {flight.itineraries.map((itinerary, itinIndex) => {
@@ -394,10 +421,15 @@ function FlightDetails({ flight, airlineNames }: FlightDetailsProps) {
             <span>{flight.numberOfBookableSeats} seats left</span>
           </div>
         </div>
-        <Button className="bg-brand-600 hover:bg-brand-700 text-white">
-          Select Flight
+        <Button 
+          onClick={onBooking || (() => {})}
+          className="bg-brand-600 hover:bg-brand-700 text-white"
+        >
+          Book Now
         </Button>
       </div>
     </div>
   );
 }
+
+// Add BookingSuccessModal to the main FlightCard component

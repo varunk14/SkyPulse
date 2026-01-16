@@ -9,10 +9,16 @@ import { ShareButton } from '@/components/shared/ShareButton';
 import { useSearchStore } from '@/store/searchStore';
 import { useRecentSearches, RecentSearch } from '@/hooks/useRecentSearches';
 import { parseDuration } from '@/lib/formatters';
-import { parseISO } from 'date-fns';
-import { AlertCircle, SearchX, Plane } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { parseISO, format } from 'date-fns';
 import { announce } from '@/lib/a11y';
+import { 
+  NoResultsFound, 
+  SearchToBegin, 
+  NoFlightsAfterFilter,
+  NetworkError,
+  GenericError
+} from './EmptyStates';
+import { getErrorMessage } from '@/lib/errorMessages';
 
 // Animation variants for staggered flight cards
 const containerVariants = {
@@ -40,9 +46,59 @@ const cardVariants = {
 };
 
 export function FlightList() {
-  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams } = useSearchStore();
+  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams, searchParams, setFlights, setIsLoading, setError, setAirlinesDictionary } = useSearchStore();
   const { searches } = useRecentSearches();
   const [sortBy, setSortBy] = useState<SortOption>('price_asc');
+
+  // Retry search function
+  const handleRetrySearch = async () => {
+    if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams({
+        origin: searchParams.origin.iataCode,
+        destination: searchParams.destination.iataCode,
+        departureDate: format(searchParams.departureDate, 'yyyy-MM-dd'),
+        adults: searchParams.passengers.adults.toString(),
+      });
+
+      if (searchParams.returnDate && searchParams.tripType === 'roundTrip') {
+        params.append('returnDate', format(searchParams.returnDate, 'yyyy-MM-dd'));
+      }
+      if (searchParams.passengers.children > 0) {
+        params.append('children', searchParams.passengers.children.toString());
+      }
+      if (searchParams.passengers.infants > 0) {
+        params.append('infants', searchParams.passengers.infants.toString());
+      }
+      if (searchParams.cabinClass !== 'ECONOMY') {
+        params.append('cabinClass', searchParams.cabinClass);
+      }
+
+      const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
+      params.append('useMock', String(useMock));
+
+      const response = await fetch(`/api/flights/search?${params}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Search failed');
+      }
+
+      setFlights(data.data || []);
+      setAirlinesDictionary(data.dictionaries?.carriers || {});
+    } catch (error: any) {
+      setError(error.message);
+      setFlights([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Apply filters and sorting
   const processedFlights = useMemo(() => {
@@ -125,25 +181,6 @@ export function FlightList() {
     }
   }, [processedFlights.length, isLoading, flights.length]);
 
-  // Loading state
-  if (isLoading) {
-    return <FlightListSkeleton count={8} />;
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center" role="alert" aria-live="assertive">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-red-900 mb-2">Search Failed</h2>
-        <p className="text-red-700 mb-4">{error}</p>
-        <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
   // Handle recent search selection
   const handleRecentSelect = async (search: RecentSearch) => {
     try {
@@ -170,28 +207,41 @@ export function FlightList() {
     }
   };
 
-  // Empty state (no search yet)
-  if (flights.length === 0) {
+  // Loading state
+  if (isLoading) {
+    return <FlightListSkeleton count={8} />;
+  }
+
+  // Error state - check if it's a network error
+  if (error) {
+    const errorMsg = getErrorMessage({ message: error });
+    const isNetworkError = error.toLowerCase().includes('network') || 
+                          error.toLowerCase().includes('fetch') ||
+                          error.toLowerCase().includes('connection');
+
+    if (isNetworkError) {
+      return <NetworkError onRetry={handleRetrySearch} />;
+    }
+
+    return <GenericError error={errorMsg.description} onRetry={handleRetrySearch} />;
+  }
+
+  // Empty state (no search yet) - check if user has searched
+  const hasSearched = searchParams.origin && searchParams.destination && searchParams.departureDate;
+  
+  if (!hasSearched && flights.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center" role="status">
-        <div className="h-20 w-20 rounded-full bg-brand-100 flex items-center justify-center mx-auto mb-6">
-          <Plane className="h-10 w-10 text-brand-600" aria-hidden="true" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Ready to Explore?
-        </h2>
-        <p className="text-gray-600 max-w-md mx-auto mb-6">
-          Enter your travel details above to discover amazing flight deals from hundreds of airlines
-        </p>
+      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12">
+        <SearchToBegin />
         {searches.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-3">Your recent searches</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">Your recent searches</h3>
             <div className="flex flex-wrap gap-2 justify-center">
               {searches.map((search) => (
                 <button
                   key={search.id}
                   onClick={() => handleRecentSelect(search)}
-                  className="px-3 py-2 bg-white rounded-full border hover:border-brand-500 hover:bg-brand-50 transition-all text-sm"
+                  className="px-3 py-2 bg-white dark:bg-gray-800 rounded-full border dark:border-gray-700 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all text-sm"
                 >
                   {search.from.code} → {search.to.code}
                 </button>
@@ -203,24 +253,14 @@ export function FlightList() {
     );
   }
 
+  // No results from API search
+  if (hasSearched && flights.length === 0 && !isLoading) {
+    return <NoResultsFound onClearFilters={resetFilters} />;
+  }
+
   // No results after filtering
-  if (processedFlights.length === 0) {
-    return (
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center" role="status" aria-live="polite">
-        <SearchX className="h-12 w-12 text-amber-600 mx-auto mb-4" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-amber-900 mb-2">No Matching Flights</h2>
-        <p className="text-amber-700 mb-4">
-          Try adjusting your filters to see more results
-        </p>
-        <Button 
-          variant="outline" 
-          className="border-amber-300 text-amber-700 hover:bg-amber-100"
-          onClick={resetFilters}
-        >
-          Clear All Filters
-        </Button>
-      </div>
-    );
+  if (processedFlights.length === 0 && flights.length > 0) {
+    return <NoFlightsAfterFilter onClearFilters={resetFilters} />;
   }
 
   return (

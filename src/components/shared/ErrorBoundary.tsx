@@ -1,12 +1,12 @@
 'use client';
 
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface State {
@@ -14,53 +14,63 @@ interface State {
   error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-  };
+export class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
-  public static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
-  private handleReset = () => {
-    this.setState({ hasError: false, error: undefined });
-    window.location.reload();
-  };
-
-  public render() {
+  render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
       return (
-        <div 
-          className="min-h-[400px] flex items-center justify-center p-8"
-          role="alert"
-          aria-live="assertive"
-        >
+        <div className="min-h-screen flex items-center justify-center px-4">
           <div className="text-center max-w-md">
-            <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="h-8 w-8 text-amber-600" aria-hidden="true" />
+            <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Something went wrong
-            </h2>
-            <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. Please try again or refresh the page.
+            </h1>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
-            <Button 
-              onClick={this.handleReset} 
-              className="bg-brand-600 hover:bg-brand-700"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-              Refresh Page
-            </Button>
+
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <pre className="text-left text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4 overflow-auto">
+                {this.state.error.toString()}
+              </pre>
+            )}
+
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => window.location.reload()}
+                size="lg"
+              >
+                Refresh page
+              </Button>
+              
+              <Button
+                onClick={() => window.location.href = '/'}
+                variant="outline"
+                size="lg"
+              >
+                Go home
+              </Button>
+            </div>
           </div>
         </div>
       );

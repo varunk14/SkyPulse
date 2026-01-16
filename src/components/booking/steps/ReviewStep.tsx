@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useBookingStore } from '@/store/bookingStore';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 import { formatPrice, formatDate } from '@/lib/formatters';
+import { FlightSegment } from '@/types';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the map component with SSR disabled
@@ -94,7 +95,7 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
                   origin={selectedFlight.itineraries[0].segments[0].departure.iataCode}
                   destination={selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.iataCode}
                   stops={selectedFlight.itineraries[0].segments.length > 1 
-                    ? selectedFlight.itineraries[0].segments.slice(0, -1).map(s => s.arrival.iataCode)
+                    ? selectedFlight.itineraries[0].segments.slice(0, -1).map((s: FlightSegment) => s.arrival.iataCode)
                     : []
                   }
                 />

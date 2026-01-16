@@ -23,11 +23,11 @@ export function CurrencySelector() {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-10 px-3 gap-2 bg-white hover:bg-gray-50 border-gray-200"
+          className="h-9 sm:h-10 px-2 sm:px-3 gap-1 sm:gap-2 bg-white hover:bg-gray-50 border-gray-200"
         >
           <span className="font-semibold">{CURRENCY_SYMBOLS[selectedCurrency]}</span>
-          <span className="text-gray-600">{selectedCurrency}</span>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
+          <span className="text-gray-600 hidden sm:inline">{selectedCurrency}</span>
+          <ChevronDown className="h-4 w-4 text-gray-400 hidden sm:inline" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="end">

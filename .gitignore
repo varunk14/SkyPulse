@@ -30,8 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files - IMPORTANT!
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,8 +45,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# documentation
-*.md
+# IDE
+.vscode/
+.idea/
 
-# scripts
-.sh
+# OS files
+.DS_Store
+Thumbs.db
+
+# temporary files
+*.tmp
+*.temp
+debug.sh
+verify-project.sh

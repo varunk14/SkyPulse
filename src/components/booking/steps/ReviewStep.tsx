@@ -12,9 +12,10 @@ import { FlightSegment } from '@/types';
 
 interface ReviewStepProps {
   onComplete?: () => void;
+  onWizardClose?: () => void;
 }
 
-export function ReviewStep({ onComplete }: ReviewStepProps) {
+export function ReviewStep({ onComplete, onWizardClose }: ReviewStepProps) {
   const { selectedFlight, passengers, contactInfo, paymentInfo, resetBooking } = useBookingStore();
   const { selectedCurrency } = useSearchStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -39,7 +40,7 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
     setIsProcessing(false);
     setShowSuccess(true);
     
-    // Notify parent that booking is complete
+    // Notify parent that booking is complete (but don't close wizard yet)
     if (onComplete) {
       onComplete();
     }
@@ -162,6 +163,13 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
         onClose={() => {
           setShowSuccess(false);
           resetBooking();
+          // Close the wizard after success modal closes
+          if (onWizardClose) {
+            // Small delay to allow modal animation to complete
+            setTimeout(() => {
+              onWizardClose();
+            }, 300);
+          }
         }}
         bookingDetails={bookingDetails}
       />

@@ -104,7 +104,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 value={passenger.title}
                 onValueChange={(value) => updatePassenger(passenger.id, 'title', value)}
               >
-                <SelectTrigger className="w-full focus-visible:ring-blue-500/50 focus-visible:border-blue-500">
+                <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,7 +124,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 value={passenger.type}
                 onValueChange={(value) => updatePassenger(passenger.id, 'type', value)}
               >
-                <SelectTrigger className="w-full focus-visible:ring-blue-500/50 focus-visible:border-blue-500">
+                <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,7 +144,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 value={passenger.firstName}
                 onChange={(e) => updatePassenger(passenger.id, 'firstName', e.target.value)}
                 placeholder="As on passport"
-                className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
 
@@ -157,7 +157,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 value={passenger.lastName}
                 onChange={(e) => updatePassenger(passenger.id, 'lastName', e.target.value)}
                 placeholder="As on passport"
-                className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
 
@@ -170,7 +170,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 type="date"
                 value={passenger.dateOfBirth}
                 onChange={(e) => updatePassenger(passenger.id, 'dateOfBirth', e.target.value)}
-                className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
 
@@ -183,7 +183,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
                 value={passenger.nationality}
                 onChange={(e) => updatePassenger(passenger.id, 'nationality', e.target.value)}
                 placeholder="e.g., United States"
-                className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@ export function PassengerDetailsStep({ onComplete }: PassengerDetailsStepProps) 
       <Button 
         onClick={addPassenger} 
         variant="outline" 
-        className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+        className="w-full h-11 sm:h-10 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
       >
         <Plus className="mr-2 h-4 w-4" />
         Add Another Passenger

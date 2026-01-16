@@ -65,7 +65,7 @@ export function PaymentStep({ onComplete }: PaymentStepProps) {
               onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
               placeholder="4242 4242 4242 4242"
               maxLength={19}
-              className="pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+              className="h-11 sm:h-10 text-base sm:text-sm pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
             />
           </div>
         </div>
@@ -79,14 +79,15 @@ export function PaymentStep({ onComplete }: PaymentStepProps) {
             value={cardHolder}
             onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
             placeholder="JOHN DOE"
-            className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+            className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <div className="space-y-2">
             <Label htmlFor="expiryMonth" className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">
-              Expiry Month
+              <span className="hidden sm:inline">Expiry Month</span>
+              <span className="sm:hidden">Month</span>
             </Label>
             <Input
               id="expiryMonth"
@@ -94,13 +95,14 @@ export function PaymentStep({ onComplete }: PaymentStepProps) {
               onChange={(e) => setExpiryMonth(e.target.value)}
               placeholder="MM"
               maxLength={2}
-              className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+              className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="expiryYear" className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">
-              Expiry Year
+              <span className="hidden sm:inline">Expiry Year</span>
+              <span className="sm:hidden">Year</span>
             </Label>
             <Input
               id="expiryYear"
@@ -108,7 +110,7 @@ export function PaymentStep({ onComplete }: PaymentStepProps) {
               onChange={(e) => setExpiryYear(e.target.value)}
               placeholder="YY"
               maxLength={2}
-              className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+              className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
             />
           </div>
 
@@ -123,7 +125,7 @@ export function PaymentStep({ onComplete }: PaymentStepProps) {
               onChange={(e) => setCvv(e.target.value)}
               placeholder="123"
               maxLength={3}
-              className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+              className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
             />
           </div>
         </div>

@@ -30,22 +30,24 @@ export function MockDataToggle() {
         variant={useMockData ? "default" : "outline"}
         size="sm"
         onClick={handleToggle}
-        className="gap-2"
+        className="gap-1 sm:gap-2 px-2 sm:px-3"
       >
         {useMockData ? (
           <>
             <Database className="h-4 w-4" />
-            Mock Data
+            <span className="hidden sm:inline">Mock Data</span>
+            <span className="sm:hidden">Mock</span>
           </>
         ) : (
           <>
             <CloudOff className="h-4 w-4" />
-            Live API
+            <span className="hidden sm:inline">Live API</span>
+            <span className="sm:hidden">Live</span>
           </>
         )}
       </Button>
       {useMockData && (
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
           Demo Mode
         </Badge>
       )}

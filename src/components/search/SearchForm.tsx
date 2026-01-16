@@ -268,9 +268,9 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
       </div>
 
       {/* Search Fields */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        {/* Origin */}
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        {/* Origin - full width mobile, grid on desktop */}
+        <div className="sm:col-span-1 lg:col-span-3">
           <AirportSelect
             ref={originInputRef}
             value={searchParams.origin}
@@ -286,7 +286,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
           />
         </div>
 
-        {/* Swap Button */}
+        {/* Swap Button - ONLY show on desktop */}
         <div className="hidden lg:flex lg:col-span-1 items-center justify-center">
           <motion.div whileHover={{ scale: 1.1, rotate: 180 }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.2 }}>
             <Button
@@ -302,7 +302,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         </div>
 
         {/* Destination */}
-        <div className="lg:col-span-3">
+        <div className="sm:col-span-1 lg:col-span-3">
           <AirportSelect
             value={searchParams.destination}
             onChange={(airport) => {
@@ -315,8 +315,9 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
           />
         </div>
 
+        {/* Dates - side by side on tablet+, stack on mobile */}
         {/* Departure Date */}
-        <div className="lg:col-span-2">
+        <div className="sm:col-span-1 lg:col-span-2">
           <DatePicker
             value={searchParams.departureDate}
             onChange={(date) => {
@@ -337,7 +338,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         </div>
 
         {/* Return Date */}
-        <div className="lg:col-span-2">
+        <div className="sm:col-span-1 lg:col-span-2">
           <DatePicker
             value={searchParams.returnDate}
             onChange={(date) => {
@@ -353,7 +354,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         </div>
 
         {/* Passengers - Full width on mobile, inline on desktop */}
-        <div className="lg:hidden">
+        <div className="sm:col-span-2 lg:hidden">
           <PassengerSelect
             value={searchParams.passengers}
             onChange={(passengers) => setSearchParams({ passengers })}
@@ -361,9 +362,9 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         </div>
       </div>
 
-      {/* Bottom Row: Passengers + Search Button */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-4">
-        <div className="hidden lg:block">
+      {/* Bottom Row: Passengers + Search Button - responsive */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-4">
+        <div className="hidden lg:block sm:w-auto">
           <PassengerSelect
             value={searchParams.passengers}
             onChange={(passengers) => setSearchParams({ passengers })}
@@ -373,7 +374,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex-1 sm:flex-none"
+          className="w-full sm:flex-1 sm:min-w-[200px]"
         >
           <Button
             onClick={handleSearch}
@@ -385,7 +386,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
               (searchParams.tripType === 'roundTrip' && !searchParams.returnDate)
             }
             className={cn(
-              "w-full sm:min-w-[200px] h-14",
+              "w-full h-12 sm:h-14",
               "bg-brand-600 hover:bg-brand-700 text-white",
               "font-semibold text-base",
               "transition-all duration-200",

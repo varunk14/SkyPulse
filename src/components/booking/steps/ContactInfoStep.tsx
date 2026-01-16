@@ -53,7 +53,7 @@ export function ContactInfoStep({ onComplete }: ContactInfoStepProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+              className="h-11 sm:h-10 text-base sm:text-sm pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
             />
           </div>
         </div>
@@ -63,12 +63,12 @@ export function ContactInfoStep({ onComplete }: ContactInfoStepProps) {
             Phone Number
           </Label>
           <div className="flex gap-3">
-            <div className="space-y-2 w-24">
+            <div className="space-y-2 w-20 sm:w-24">
               <Input
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
                 placeholder="+1"
-                className="focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
             <div className="relative flex-1 space-y-2">
@@ -79,7 +79,7 @@ export function ContactInfoStep({ onComplete }: ContactInfoStepProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(555) 123-4567"
-                className="pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
+                className="h-11 sm:h-10 text-base sm:text-sm pl-10 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all"
               />
             </div>
           </div>

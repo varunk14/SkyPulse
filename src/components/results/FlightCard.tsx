@@ -98,31 +98,47 @@ export const FlightCard = memo(function FlightCard({
       </button>
 
       {/* Main Content */}
-      <div className="p-5 sm:p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          {/* Airline Info */}
-          <div className="flex items-center gap-3 lg:w-40 shrink-0">
-            <img
-              src={getAirlineLogo(mainCarrier)}
-              alt={airlineName}
-              className="h-10 w-10 rounded-lg object-contain bg-gray-50 p-1"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = 'h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center';
-                fallback.innerHTML = `<span class="text-xs font-bold text-gray-500">${mainCarrier}</span>`;
-                target.parentElement?.appendChild(fallback);
-              }}
-            />
+      <div className="p-4 sm:p-6">
+        {/* Change from flex-row to flex-col on mobile */}
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          {/* Airline - full width mobile */}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-gray-50 p-1 flex items-center justify-center shrink-0">
+              <img
+                src={getAirlineLogo(mainCarrier)}
+                alt={airlineName}
+                className="h-full w-full rounded-lg object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.style.display = 'none';
+                  const fallback = document.createElement('div');
+                  fallback.className = 'h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-gray-100 flex items-center justify-center';
+                  fallback.innerHTML = `<span class="text-xs font-bold text-gray-500">${mainCarrier}</span>`;
+                  target.parentElement?.appendChild(fallback);
+                }}
+              />
+            </div>
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 truncate">{airlineName}</p>
+              <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{airlineName}</p>
               <p className="text-xs text-gray-500">{mainCarrier}</p>
+            </div>
+            {/* Badges - show on mobile next to airline */}
+            <div className="flex flex-wrap gap-1.5 ml-auto sm:hidden">
+              {isCheapest && (
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                  Best
+                </Badge>
+              )}
+              {isFastest && (
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-xs">
+                  Fast
+                </Badge>
+              )}
             </div>
           </div>
 
-          {/* Flight Timeline - Outbound */}
+          {/* Flight Timeline - responsive grid */}
           <div className="flex-1">
             <FlightTimeline
               itinerary={outbound}
@@ -139,9 +155,10 @@ export const FlightCard = memo(function FlightCard({
             )}
           </div>
 
-          {/* Price & Actions */}
-          <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 lg:w-36 shrink-0">
-            <div className="flex flex-wrap gap-1.5">
+          {/* Price - horizontal on mobile, vertical on desktop */}
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l sm:pl-6 sm:w-36 shrink-0">
+            {/* Badges - show on desktop */}
+            <div className="hidden sm:flex flex-wrap gap-1.5">
               {isCheapest && (
                 <motion.div
                   variants={badgeVariants}
@@ -165,8 +182,8 @@ export const FlightCard = memo(function FlightCard({
                 </motion.div>
               )}
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900 font-mono">
+            <div className="text-left sm:text-right">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 font-mono">
                 {formatPrice(price, selectedCurrency)}
               </p>
               <p className="text-xs text-gray-500">per person</p>
@@ -248,21 +265,21 @@ function FlightTimeline({ itinerary }: FlightTimelineProps) {
     : null;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2 sm:gap-4">
       {/* Departure */}
       <div className="text-center shrink-0">
-        <p className="text-xl font-bold text-gray-900">
+        <p className="text-lg sm:text-xl font-bold text-gray-900">
           {formatTime(firstSegment.departure.at)}
         </p>
-        <p className="text-sm font-medium text-gray-600">
+        <p className="text-xs sm:text-sm font-medium text-gray-600">
           {firstSegment.departure.iataCode}
         </p>
       </div>
 
       {/* Duration & Stops */}
-      <div className="flex-1 px-2">
-        <div className="flex items-center gap-2 justify-center mb-1">
-          <Clock className="h-3.5 w-3.5 text-gray-400" />
+      <div className="flex-1 px-1 sm:px-2">
+        <div className="flex items-center gap-1 sm:gap-2 justify-center mb-1">
+          <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400" />
           <span className="text-xs font-medium text-gray-500">
             {formatIsoDuration(itinerary.duration)}
           </span>
@@ -289,20 +306,20 @@ function FlightTimeline({ itinerary }: FlightTimelineProps) {
         )}>
           {stopsLabel}
           {layoverAirports && (
-            <span className="text-gray-400"> · {layoverAirports}</span>
+            <span className="text-gray-400 hidden sm:inline"> · {layoverAirports}</span>
           )}
         </p>
       </div>
 
       {/* Arrival */}
       <div className="text-center shrink-0">
-        <p className="text-xl font-bold text-gray-900">
+        <p className="text-lg sm:text-xl font-bold text-gray-900">
           {formatTime(lastSegment.arrival.at)}
           {nextDay && (
             <sup className="text-xs text-coral-500 ml-0.5">+1</sup>
           )}
         </p>
-        <p className="text-sm font-medium text-gray-600">
+        <p className="text-xs sm:text-sm font-medium text-gray-600">
           {lastSegment.arrival.iataCode}
         </p>
       </div>

@@ -198,22 +198,22 @@ export default function Home() {
       </a>
 
       {/* Header */}
-      <header className="w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="w-full py-3 sm:py-4 px-3 sm:px-6 lg:px-8 border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
               src="/logo.png" 
               alt="SkyPulse Logo" 
-              className="h-10 w-10 rounded-lg object-contain"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-contain"
             />
-            <span className="font-bold text-xl text-gray-900">SkyPulse</span>
+            <span className="font-bold text-lg sm:text-xl text-gray-900">SkyPulse</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             <CurrencySelector />
             <MockDataToggle />
             <button
               onClick={() => setShowShortcuts(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+              className="hidden sm:block p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
               title="Keyboard shortcuts (Shift+?)"
               aria-label="Show keyboard shortcuts"
             >

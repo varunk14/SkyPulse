@@ -37,7 +37,8 @@ export const AirportSelect = React.forwardRef<HTMLButtonElement, AirportSelectPr
     debounceRef.current = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/airports/search?keyword=${encodeURIComponent(query)}`);
+        const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
+        const response = await fetch(`/api/airports/search?keyword=${encodeURIComponent(query)}&useMock=${useMock}`);
         const data = await response.json();
         setAirports(data.data || []);
       } catch (error) {

@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const children = parseInt(searchParams.get('children') || '0');
   const infants = parseInt(searchParams.get('infants') || '0');
   const cabinClass = searchParams.get('cabinClass');
+  const useMock = searchParams.get('useMock') === 'true';
 
   if (!origin || !destination || !departureDate) {
     return NextResponse.json(
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       infants: infants || undefined,
       travelClass: cabinClass || undefined,
       max: 100,
-    });
+    }, useMock);
 
     return NextResponse.json(data);
   } catch (error: any) {

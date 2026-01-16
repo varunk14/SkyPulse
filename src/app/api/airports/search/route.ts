@@ -4,21 +4,22 @@ import { amadeusClient } from '@/lib/amadeus';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const keyword = searchParams.get('keyword');
+  const useMock = searchParams.get('useMock') === 'true';
 
   if (!keyword || keyword.length < 2) {
     return NextResponse.json({ data: [] });
   }
 
   try {
-    const data = await amadeusClient.searchAirports(keyword);
+    const data = await amadeusClient.searchAirports(keyword, useMock);
     
     // Transform the response to a cleaner format
     const airports = data.data?.map((item: any) => ({
       iataCode: item.iataCode,
       name: item.name,
-      cityName: item.address?.cityName || item.name,
-      countryCode: item.address?.countryCode,
-      countryName: item.address?.countryName,
+      cityName: item.address?.cityName || item.cityName || item.name,
+      countryCode: item.address?.countryCode || item.countryCode,
+      countryName: item.address?.countryName || item.countryName,
     })) || [];
 
     return NextResponse.json({ data: airports });

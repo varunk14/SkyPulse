@@ -51,9 +51,10 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
     // Find airports by IATA code
     const loadAirportsFromRecent = async () => {
       try {
+        const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
         const [originRes, destRes] = await Promise.all([
-          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}`),
-          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}`)
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.from.code)}&useMock=${useMock}`),
+          fetch(`/api/airports/search?keyword=${encodeURIComponent(search.to.code)}&useMock=${useMock}`)
         ]);
 
         const originData = await originRes.json();
@@ -145,6 +146,9 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
       if (searchParams.cabinClass !== 'ECONOMY') {
         params.append('cabinClass', searchParams.cabinClass);
       }
+
+      const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
+      params.append('useMock', String(useMock));
 
       const response = await fetch(`/api/flights/search?${params}`);
       const data = await response.json();

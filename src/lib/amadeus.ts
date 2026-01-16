@@ -1,3 +1,6 @@
+import { searchMockAirports } from './mock-data/airports';
+import { generateMockFlights } from './mock-data/flights';
+
 interface TokenResponse {
   access_token: string;
   expires_in: number;
@@ -38,7 +41,15 @@ class AmadeusClient {
     return this.accessToken;
   }
 
-  async searchAirports(keyword: string): Promise<any> {
+  async searchAirports(keyword: string, useMock: boolean = false): Promise<any> {
+    if (useMock) {
+      console.log('🎭 Using MOCK airport data for:', keyword);
+      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
+      const mockResults = searchMockAirports(keyword);
+      // Return in the same format as the API (wrapped in data array)
+      return { data: mockResults };
+    }
+    
     const token = await this.getToken();
     
     const params = new URLSearchParams({
@@ -74,7 +85,20 @@ class AmadeusClient {
     travelClass?: string;
     nonStop?: boolean;
     max?: number;
-  }): Promise<any> {
+  }, useMock: boolean = false): Promise<any> {
+    if (useMock) {
+      console.log('🎭 Using MOCK flight data for:', params);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
+      return generateMockFlights({
+        origin: params.originLocationCode,
+        destination: params.destinationLocationCode,
+        departureDate: params.departureDate,
+        returnDate: params.returnDate,
+        adults: params.adults,
+        cabinClass: params.travelClass,
+      });
+    }
+    
     const token = await this.getToken();
 
     const searchParams: any = {

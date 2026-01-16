@@ -9,6 +9,7 @@ import { FilterPanel } from '@/components/filters/FilterPanel';
 import { PriceGraph } from '@/components/graph/PriceGraph';
 import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal';
 import { CompareBar } from '@/components/comparison/CompareBar';
+import { MockDataToggle } from '@/components/MockDataToggle';
 import { useSearchStore } from '@/store/searchStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
@@ -52,9 +53,10 @@ export default function Home() {
         // Fetch airports by IATA code
         const loadAirportsFromURL = async () => {
           try {
+            const useMock = typeof window !== 'undefined' && localStorage.getItem('useMockData') === 'true';
             const [originRes, destRes] = await Promise.all([
-              fetch(`/api/airports/search?keyword=${encodeURIComponent(from)}`),
-              fetch(`/api/airports/search?keyword=${encodeURIComponent(to)}`)
+              fetch(`/api/airports/search?keyword=${encodeURIComponent(from)}&useMock=${useMock}`),
+              fetch(`/api/airports/search?keyword=${encodeURIComponent(to)}&useMock=${useMock}`)
             ]);
 
             const originData = await originRes.json();
@@ -199,14 +201,17 @@ export default function Home() {
             />
             <span className="font-bold text-xl text-gray-900">SkyPulse</span>
           </div>
-          <button
-            onClick={() => setShowShortcuts(true)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
-            title="Keyboard shortcuts (Shift+?)"
-            aria-label="Show keyboard shortcuts"
-          >
-            <span className="text-sm font-mono font-semibold">?</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <MockDataToggle />
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+              title="Keyboard shortcuts (Shift+?)"
+              aria-label="Show keyboard shortcuts"
+            >
+              <span className="text-sm font-mono font-semibold">?</span>
+            </button>
+          </div>
         </div>
       </header>
 

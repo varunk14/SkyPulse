@@ -7,20 +7,6 @@ import { useBookingStore } from '@/store/bookingStore';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 import { formatPrice, formatDate } from '@/lib/formatters';
 import { FlightSegment } from '@/types';
-import dynamic from 'next/dynamic';
-
-// Dynamically import the map component with SSR disabled
-const InteractiveFlightMap = dynamic(
-  () => import('@/components/map/InteractiveFlightMap').then(mod => ({ default: mod.InteractiveFlightMap })),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
-        <div className="text-gray-500">Loading map...</div>
-      </div>
-    )
-  }
-);
 
 interface ReviewStepProps {
   onComplete?: () => void;
@@ -87,18 +73,6 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
                     {formatDate(selectedFlight.itineraries[0].segments[0].departure.at)}
                   </span>
                 </div>
-              </div>
-              
-              {/* Interactive Flight Route Map */}
-              <div className="mt-4">
-                <InteractiveFlightMap
-                  origin={selectedFlight.itineraries[0].segments[0].departure.iataCode}
-                  destination={selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.iataCode}
-                  stops={selectedFlight.itineraries[0].segments.length > 1 
-                    ? selectedFlight.itineraries[0].segments.slice(0, -1).map((s: FlightSegment) => s.arrival.iataCode)
-                    : []
-                  }
-                />
               </div>
             </>
           )}

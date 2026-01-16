@@ -116,30 +116,43 @@ export function LeafletMapContent({
   destCoords,
   onMapReady 
 }: LeafletMapContentProps) {
+  // 1. ALL useState hooks first
   const [isMounted, setIsMounted] = useState(false);
+  
+  // 2. ALL useRef hooks
   const iconsRef = useRef<ReturnType<typeof createIcons> | null>(null);
   
-  // Ensure we're on client side before rendering
+  // 3. ALL useEffect hooks (including cleanup)
   useEffect(() => {
     setIsMounted(true);
     iconsRef.current = createIcons();
+    
+    return () => {
+      // Cleanup on unmount
+      setIsMounted(false);
+      const mapContainers = document.querySelectorAll('.leaflet-container');
+      mapContainers.forEach((container: any) => {
+        if (container._leaflet_id) {
+          delete container._leaflet_id;
+        }
+      });
+    };
   }, []);
-
-  // Calculate stop coordinates
+  
+  // 4. ALL useMemo/useCallback hooks
+  const center = useMemo(() => originCoords, [originCoords]);
   const stopCoords = useMemo(() => 
     stops.map(stop => airportCoordinates[stop]).filter(Boolean) as [number, number][],
     [stops]
   );
-
-  // Create polyline path
   const path = useMemo(() => {
     const p: [number, number][] = [originCoords];
     stopCoords.forEach(coord => p.push(coord));
     p.push(destCoords);
     return p;
   }, [originCoords, destCoords, stopCoords]);
-
-  // Don't render until mounted on client
+  
+  // 5. THEN the JSX return
   if (!isMounted || !iconsRef.current) {
     return (
       <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb' }}>
@@ -149,14 +162,20 @@ export function LeafletMapContent({
   }
 
   const icons = iconsRef.current;
+  const zoom = 4;
+  const mapKey = `map-${origin}-${destination}`;
 
   return (
     <MapContainer
-      center={originCoords}
-      zoom={4}
+      key={mapKey}
+      center={center}
+      zoom={zoom}
       style={{ height: '100%', width: '100%' }}
-      scrollWheelZoom={true}
-      zoomControl={false}
+      scrollWheelZoom={false}
+      dragging={true}
+      zoomControl={true}
+      doubleClickZoom={true}
+      className="h-full w-full rounded-lg"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

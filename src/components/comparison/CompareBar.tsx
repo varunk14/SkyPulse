@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GitCompare } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 import { useState } from "react";
+import { formatPrice } from "@/lib/currency";
 import { CompareModal } from "./CompareModal";
 
 export function CompareBar() {
-  const { compareFlights, removeFromCompare, clearCompare } = useSearchStore();
+  const { compareFlights, removeFromCompare, clearCompare, selectedCurrency } = useSearchStore();
   const [showModal, setShowModal] = useState(false);
 
   if (compareFlights.length === 0) return null;
@@ -29,7 +30,7 @@ export function CompareBar() {
                 className="relative bg-gray-100 dark:bg-gray-700 rounded-lg px-2 sm:px-3 py-2 pr-6 sm:pr-8 shrink-0"
               >
                 <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
-                  {flight.itineraries[0].segments[0].carrierCode} · €{flight.price.grandTotal}
+                  {flight.itineraries[0].segments[0].carrierCode} · {formatPrice(parseFloat(flight.price.grandTotal), selectedCurrency)}
                 </span>
                 <button
                   onClick={() => removeFromCompare(flight.id)}

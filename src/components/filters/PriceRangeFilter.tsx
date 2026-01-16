@@ -4,13 +4,14 @@ import { memo, useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { useSearchStore } from '@/store/searchStore';
-import { formatPrice } from '@/lib/formatters';
+import { formatPrice, convertPrice, convertToUSD } from '@/lib/currency';
 
 export const PriceRangeFilter = memo(function PriceRangeFilter() {
   // Use selectors to subscribe only to needed parts of the store
   const flights = useSearchStore((state) => state.flights);
   const priceRangeFilter = useSearchStore((state) => state.filters.priceRange);
   const setFilters = useSearchStore((state) => state.setFilters);
+  const selectedCurrency = useSearchStore((state) => state.selectedCurrency);
   
   const isInitializedRef = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -103,11 +104,13 @@ export const PriceRangeFilter = memo(function PriceRangeFilter() {
     return counts.map((count) => (maxCount > 0 ? (count / maxCount) * 100 : 0));
   }, [flights, priceRange]);
 
-  const currency = flights[0]?.price?.currency || 'USD';
+  // Convert prices for display (prices are stored in USD, convert for display)
+  const displayMin = useMemo(() => Math.round(convertPrice(localRange[0], selectedCurrency)), [localRange[0], selectedCurrency]);
+  const displayMax = useMemo(() => Math.round(convertPrice(localRange[1], selectedCurrency)), [localRange[1], selectedCurrency]);
 
   const formattedRange = useMemo(() => 
-    `${formatPrice(localRange[0], currency)} – ${formatPrice(localRange[1], currency)}`,
-    [localRange, currency]
+    `${formatPrice(localRange[0], selectedCurrency)} – ${formatPrice(localRange[1], selectedCurrency)}`,
+    [localRange, selectedCurrency]
   );
 
   if (flights.length === 0) return null;
@@ -145,27 +148,45 @@ export const PriceRangeFilter = memo(function PriceRangeFilter() {
         className="relative z-10 -mt-2"
       />
 
-      {/* Input fields */}
+      {/* Input fields - show converted values for display but store USD values */}
       <div className="flex items-center gap-2 mt-3">
         <div className="flex-1">
           <Input
             type="number"
-            value={localRange[0]}
-            onChange={handleMinChange}
+            value={displayMin}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || Math.round(convertPrice(priceRange.min, selectedCurrency));
+              // Convert back to USD for storage
+              const usdValue = convertToUSD(value, selectedCurrency);
+              setLocalRange((prev) => {
+                const newRange: [number, number] = [usdValue, prev[1]];
+                updateStore(newRange);
+                return newRange;
+              });
+            }}
             className="text-sm h-9"
-            min={priceRange.min}
-            max={localRange[1]}
+            min={Math.round(convertPrice(priceRange.min, selectedCurrency))}
+            max={displayMax}
           />
         </div>
         <span className="text-gray-400">–</span>
         <div className="flex-1">
           <Input
             type="number"
-            value={localRange[1]}
-            onChange={handleMaxChange}
+            value={displayMax}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || Math.round(convertPrice(priceRange.max, selectedCurrency));
+              // Convert back to USD for storage
+              const usdValue = convertToUSD(value, selectedCurrency);
+              setLocalRange((prev) => {
+                const newRange: [number, number] = [prev[0], usdValue];
+                updateStore(newRange);
+                return newRange;
+              });
+            }}
             className="text-sm h-9"
-            min={localRange[0]}
-            max={priceRange.max}
+            min={displayMin}
+            max={Math.round(convertPrice(priceRange.max, selectedCurrency))}
           />
         </div>
       </div>

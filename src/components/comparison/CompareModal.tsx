@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Plane, Clock, DollarSign, Loader2 } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
-import { parseDuration, formatPrice, formatTime, getStopsCount, formatDate } from "@/lib/formatters";
+import { parseDuration, formatTime, getStopsCount, formatDate } from "@/lib/formatters";
+import { formatPrice } from "@/lib/currency";
 import { BookingSuccessModal } from "@/components/BookingSuccessModal";
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export function CompareModal({ isOpen, onClose }: Props) {
-  const { compareFlights, clearCompare } = useSearchStore();
+  const { compareFlights, clearCompare, selectedCurrency } = useSearchStore();
   const flightCount = compareFlights.length;
 
   // Dynamic grid columns based on flight count
@@ -56,7 +57,7 @@ export function CompareModal({ isOpen, onClose }: Props) {
       origin: outbound.segments[0].departure.iataCode,
       destination: outbound.segments[outbound.segments.length - 1].arrival.iataCode,
       departureDate: formatDate(outbound.segments[0].departure.at),
-      totalPrice: formatPrice(flight.price.grandTotal, flight.price.currency)
+      totalPrice: formatPrice(parseFloat(flight.price.grandTotal), selectedCurrency)
     };
     
     setBookingFlightId(null);
@@ -127,7 +128,7 @@ export function CompareModal({ isOpen, onClose }: Props) {
                         prices[i] === bestPrice ? "bg-green-50 dark:bg-green-900/20 ring-2 ring-green-500" : "bg-gray-50 dark:bg-gray-700"
                       }`}
                     >
-                      <span className="text-xl font-bold">{formatPrice(flight.price.grandTotal, flight.price.currency)}</span>
+                      <span className="text-xl font-bold">{formatPrice(parseFloat(flight.price.grandTotal), selectedCurrency)}</span>
                       {prices[i] === bestPrice && (
                         <span className="ml-2 text-green-600 text-sm font-medium">Best</span>
                       )}

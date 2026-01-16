@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBookingStore } from '@/store/bookingStore';
+import { useSearchStore } from '@/store/searchStore';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
-import { formatPrice, formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
+import { formatPrice } from '@/lib/currency';
 import { FlightSegment } from '@/types';
 
 interface ReviewStepProps {
@@ -14,6 +16,7 @@ interface ReviewStepProps {
 
 export function ReviewStep({ onComplete }: ReviewStepProps) {
   const { selectedFlight, passengers, contactInfo, paymentInfo, resetBooking } = useBookingStore();
+  const { selectedCurrency } = useSearchStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -29,7 +32,7 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
       origin: selectedFlight?.itineraries[0].segments[0].departure.iataCode || 'JFK',
       destination: selectedFlight?.itineraries[0].segments[selectedFlight?.itineraries[0].segments.length - 1].arrival.iataCode || 'LHR',
       departureDate: selectedFlight ? formatDate(selectedFlight.itineraries[0].segments[0].departure.at) : 'TBD',
-      totalPrice: selectedFlight ? formatPrice(selectedFlight.price.grandTotal, selectedFlight.price.currency) : '$0'
+      totalPrice: selectedFlight ? formatPrice(parseFloat(selectedFlight.price.grandTotal), selectedCurrency) : '$0'
     };
     
     setBookingDetails(details);
@@ -124,7 +127,7 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold">Total Amount</span>
             <span className="text-3xl font-bold text-brand-600">
-              {selectedFlight ? formatPrice(totalPrice, selectedFlight.price.currency) : '$0'}
+              {selectedFlight ? formatPrice(totalPrice, selectedCurrency) : '$0'}
             </span>
           </div>
         </div>
@@ -144,7 +147,7 @@ export function ReviewStep({ onComplete }: ReviewStepProps) {
           ) : (
             <>
               <Check className="mr-2 h-5 w-5" />
-              Confirm & Pay {selectedFlight ? formatPrice(totalPrice, selectedFlight.price.currency) : '$0'}
+              Confirm & Pay {selectedFlight ? formatPrice(totalPrice, selectedCurrency) : '$0'}
             </>
           )}
         </Button>

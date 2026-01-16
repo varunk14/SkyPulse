@@ -11,13 +11,13 @@ import { useSearchStore } from '@/store/searchStore';
 import {
   formatTime,
   formatIsoDuration,
-  formatPrice,
   formatDate,
   getStopsCount,
   getStopsLabel,
   getAirlineLogo,
   isNextDay,
 } from '@/lib/formatters';
+import { formatPrice } from '@/lib/currency';
 import { BookingSuccessModal } from '@/components/BookingSuccessModal';
 import { BookingWizard } from '@/components/booking/BookingWizard';
 import { useBookingStore } from '@/store/bookingStore';
@@ -48,14 +48,13 @@ export const FlightCard = memo(function FlightCard({
 }: FlightCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  const { compareFlights, addToCompare, removeFromCompare } = useSearchStore();
+  const { compareFlights, addToCompare, removeFromCompare, selectedCurrency } = useSearchStore();
   const { setSelectedFlight } = useBookingStore();
   const isInCompare = compareFlights.some((f) => f.id === flight.id);
   
   const outbound = flight.itineraries[0];
   const returnFlight = flight.itineraries[1];
   const price = parseFloat(flight.price.grandTotal);
-  const currency = flight.price.currency;
   const mainCarrier = flight.validatingAirlineCodes[0];
   const airlineName = airlineNames[mainCarrier] || mainCarrier;
 
@@ -78,7 +77,7 @@ export const FlightCard = memo(function FlightCard({
         isExpanded ? "border-brand-300 shadow-md" : "border-gray-100 shadow-sm"
       )}
       role="article"
-      aria-label={`Flight by ${airlineName} for ${formatPrice(price, currency)}`}
+      aria-label={`Flight by ${airlineName} for ${formatPrice(price, selectedCurrency)}`}
     >
       {/* Compare Checkbox Button */}
       <button
@@ -168,7 +167,7 @@ export const FlightCard = memo(function FlightCard({
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-gray-900 font-mono">
-                {formatPrice(price, currency)}
+                {formatPrice(price, selectedCurrency)}
               </p>
               <p className="text-xs text-gray-500">per person</p>
             </div>

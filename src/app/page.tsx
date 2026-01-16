@@ -11,6 +11,7 @@ import { PricePredictionBanner } from '@/components/results/PricePredictionBanne
 import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal';
 import { CompareBar } from '@/components/comparison/CompareBar';
 import { MockDataToggle } from '@/components/MockDataToggle';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import { useSearchStore } from '@/store/searchStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
@@ -208,6 +209,7 @@ export default function Home() {
             <span className="font-bold text-xl text-gray-900">SkyPulse</span>
           </div>
           <div className="flex items-center gap-3">
+            <CurrencySelector />
             <MockDataToggle />
             <button
               onClick={() => setShowShortcuts(true)}

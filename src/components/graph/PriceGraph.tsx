@@ -13,7 +13,8 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useSearchStore } from '@/store/searchStore';
-import { parseDuration, formatPrice } from '@/lib/formatters';
+import { parseDuration } from '@/lib/formatters';
+import { formatPrice } from '@/lib/currency';
 import { parseISO, format } from 'date-fns';
 
 interface PriceDataPoint {
@@ -25,7 +26,7 @@ interface PriceDataPoint {
 }
 
 export function PriceGraph() {
-  const { flights, filters, airlinesDictionary } = useSearchStore();
+  const { flights, filters, airlinesDictionary, selectedCurrency } = useSearchStore();
 
   // Generate data for the graph based on filtered flights
   const { graphData, stats } = useMemo(() => {
@@ -86,7 +87,7 @@ export function PriceGraph() {
     };
   }, [flights, filters, airlinesDictionary]);
 
-  const currency = flights[0]?.price?.currency || 'USD';
+  // Use selectedCurrency from store instead of flight currency
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: PriceDataPoint }> }) => {
@@ -95,7 +96,7 @@ export function PriceGraph() {
       return (
         <div className="bg-white rounded-lg shadow-lg border border-gray-100 p-3 min-w-[140px]">
           <p className="text-lg font-bold text-gray-900 font-mono">
-            {formatPrice(data.price, currency)}
+            {formatPrice(data.price, selectedCurrency)}
           </p>
           <p className="text-sm text-gray-600">{data.airline}</p>
           <p className="text-xs text-gray-400 mt-1">Departs at {data.name}</p>
@@ -141,19 +142,19 @@ export function PriceGraph() {
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Lowest</p>
               <p className="text-lg font-bold text-emerald-600 font-mono">
-                {formatPrice(stats.min, currency)}
+                {formatPrice(stats.min, selectedCurrency)}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Average</p>
               <p className="text-lg font-bold text-gray-900 font-mono">
-                {formatPrice(stats.avg, currency)}
+                {formatPrice(stats.avg, selectedCurrency)}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-600 uppercase tracking-wide">Highest</p>
               <p className="text-lg font-bold text-rose-500 font-mono">
-                {formatPrice(stats.max, currency)}
+                {formatPrice(stats.max, selectedCurrency)}
               </p>
             </div>
           </div>
@@ -185,7 +186,7 @@ export function PriceGraph() {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6B7280' }}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => formatPrice(value, selectedCurrency)}
               width={60}
               domain={['dataMin - 50', 'dataMax + 50']}
             />

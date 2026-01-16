@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { SearchParams, FilterState, FlightOffer } from '@/types';
 import { parseDuration } from '@/lib/formatters';
+import { Currency } from '@/lib/currency';
 
 interface SearchStore {
   // Search params
@@ -31,6 +32,10 @@ interface SearchStore {
   addToCompare: (flight: FlightOffer) => void;
   removeFromCompare: (flightId: string) => void;
   clearCompare: () => void;
+  
+  // Currency
+  selectedCurrency: Currency;
+  setSelectedCurrency: (currency: Currency) => void;
 }
 
 const defaultSearchParams: SearchParams = {
@@ -149,4 +154,8 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
     }));
   },
   clearCompare: () => set({ compareFlights: [] }),
+  
+  // Currency
+  selectedCurrency: 'USD' as Currency,
+  setSelectedCurrency: (currency) => set({ selectedCurrency: currency }),
 }));

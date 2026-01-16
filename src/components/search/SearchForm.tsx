@@ -17,7 +17,7 @@ interface SearchFormProps {
 }
 
 export function SearchForm({ originInputRef }: SearchFormProps) {
-  const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary } = useSearchStore();
+  const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, setHasSearched } = useSearchStore();
   const { addSearch } = useRecentSearches();
   const [isSearching, setIsSearching] = useState(false);
 
@@ -40,6 +40,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
     setIsSearching(true);
     setIsLoading(true);
     setError(null);
+    setHasSearched(true); // Mark that a search has been attempted
 
     try {
       const params = new URLSearchParams({
@@ -197,6 +198,12 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
       return;
     }
     
+    // Check if origin and destination are the same
+    if (searchParams.origin.iataCode === searchParams.destination.iataCode) {
+      setError('Origin and destination cannot be the same');
+      return;
+    }
+    
     // Validate return date for round trip
     if (searchParams.tripType === 'roundTrip' && !searchParams.returnDate) {
       setError('Please select return date for round trip');
@@ -269,6 +276,8 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
             value={searchParams.origin}
             onChange={(airport) => {
               setSearchParams({ origin: airport });
+              setError(null); // Clear any previous errors
+              setHasSearched(false); // Reset search flag when user modifies
             }}
             placeholder="Where from?"
             icon="departure"
@@ -296,7 +305,11 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         <div className="lg:col-span-3">
           <AirportSelect
             value={searchParams.destination}
-            onChange={(airport) => setSearchParams({ destination: airport })}
+            onChange={(airport) => {
+              setSearchParams({ destination: airport });
+              setError(null); // Clear any previous errors
+              setHasSearched(false); // Reset search flag when user modifies
+            }}
             placeholder="Where to?"
             icon="arrival"
           />
@@ -308,6 +321,8 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
             value={searchParams.departureDate}
             onChange={(date) => {
               setSearchParams({ departureDate: date });
+              setError(null); // Clear any previous errors
+              setHasSearched(false); // Reset search flag when user modifies
               // Auto-set return date if round trip and return date is before departure
               if (date && searchParams.tripType === 'roundTrip') {
                 if (!searchParams.returnDate || searchParams.returnDate < date) {
@@ -325,7 +340,11 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
         <div className="lg:col-span-2">
           <DatePicker
             value={searchParams.returnDate}
-            onChange={(date) => setSearchParams({ returnDate: date })}
+            onChange={(date) => {
+              setSearchParams({ returnDate: date });
+              setError(null); // Clear any previous errors
+              setHasSearched(false); // Reset search flag when user modifies
+            }}
             placeholder="Return"
             minDate={searchParams.departureDate || new Date()}
             disabled={searchParams.tripType === 'oneWay'}
@@ -387,17 +406,6 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
               </>
             )}
           </Button>
-          {(!searchParams.origin || !searchParams.destination || !searchParams.departureDate || (searchParams.tripType === 'roundTrip' && !searchParams.returnDate)) && (
-            <p className="text-xs text-gray-500 text-center sm:text-left mt-2">
-              {!searchParams.origin && !searchParams.destination && !searchParams.departureDate
-                ? "Please select origin, destination, and dates to search"
-                : !searchParams.departureDate
-                ? "Please select departure date"
-                : searchParams.tripType === 'roundTrip' && !searchParams.returnDate
-                ? "Please select return date for round trip"
-                : "Please complete all required fields"}
-            </p>
-          )}
         </motion.div>
       </div>
     </motion.div>

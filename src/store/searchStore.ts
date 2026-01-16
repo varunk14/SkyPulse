@@ -22,6 +22,8 @@ interface SearchStore {
   setIsLoading: (loading: boolean) => void;
   error: string | null;
   setError: (error: string | null) => void;
+  hasSearched: boolean;
+  setHasSearched: (value: boolean) => void;
   
   // Airlines dictionary (from API response)
   airlinesDictionary: Record<string, string>;
@@ -134,6 +136,8 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
   setIsLoading: (isLoading) => set({ isLoading }),
   error: null,
   setError: (error) => set({ error }),
+  hasSearched: false,
+  setHasSearched: (value) => set({ hasSearched: value }),
 
   // Airlines dictionary
   airlinesDictionary: {},

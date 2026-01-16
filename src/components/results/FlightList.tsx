@@ -19,6 +19,8 @@ import {
   GenericError
 } from './EmptyStates';
 import { getErrorMessage } from '@/lib/errorMessages';
+import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Animation variants for staggered flight cards
 const containerVariants = {
@@ -46,7 +48,7 @@ const cardVariants = {
 };
 
 export function FlightList() {
-  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams, searchParams, setFlights, setIsLoading, setError, setAirlinesDictionary } = useSearchStore();
+  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams, searchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, hasSearched, setHasSearched } = useSearchStore();
   const { searches } = useRecentSearches();
   const [sortBy, setSortBy] = useState<SortOption>('price_asc');
 
@@ -212,8 +214,8 @@ export function FlightList() {
     return <FlightListSkeleton count={8} />;
   }
 
-  // Error state - check if it's a network error
-  if (error) {
+  // Error state - only show AFTER a failed search attempt (not while filling form)
+  if (error && flights.length === 0 && !isLoading) {
     const errorMsg = getErrorMessage({ message: error });
     const isNetworkError = error.toLowerCase().includes('network') || 
                           error.toLowerCase().includes('fetch') ||
@@ -223,25 +225,47 @@ export function FlightList() {
       return <NetworkError onRetry={handleRetrySearch} />;
     }
 
-    return <GenericError error={errorMsg.description} onRetry={handleRetrySearch} />;
-  }
-
-  // Empty state (no search yet) - check if user has searched
-  const hasSearched = searchParams.origin && searchParams.destination && searchParams.departureDate;
-  
-  if (!hasSearched && flights.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-12">
-        <SearchToBegin />
+      <div className="max-w-md mx-auto text-center py-12">
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="h-8 w-8 text-red-500" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Unable to find flights
+        </h3>
+        <p className="text-gray-600 mb-6">{errorMsg.description || error}</p>
+        <Button 
+          onClick={() => setError(null)} 
+          variant="outline"
+        >
+          Modify Search
+        </Button>
+      </div>
+    );
+  }
+  
+  // Show "Ready to Explore" ONLY when no search has been done
+  if (!hasSearched && flights.length === 0 && !isLoading) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-20 h-20 bg-gradient-to-br from-brand-50 to-coral-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Ready to Explore?</h3>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Enter your travel details above to discover amazing flight deals from airlines around the world.
+        </p>
         {searches.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">Your recent searches</h3>
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Your recent searches</h3>
             <div className="flex flex-wrap gap-2 justify-center">
               {searches.map((search) => (
                 <button
                   key={search.id}
                   onClick={() => handleRecentSelect(search)}
-                  className="px-3 py-2 bg-white dark:bg-gray-800 rounded-full border dark:border-gray-700 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all text-sm"
+                  className="px-3 py-2 bg-white rounded-full border hover:border-brand-500 hover:bg-brand-50 transition-all text-sm"
                 >
                   {search.from.code} → {search.to.code}
                 </button>
@@ -253,9 +277,38 @@ export function FlightList() {
     );
   }
 
-  // No results from API search
-  if (hasSearched && flights.length === 0 && !isLoading) {
-    return <NoResultsFound onClearFilters={resetFilters} />;
+  // No results from API search - only show when hasSearched is true
+  if (hasSearched && flights.length === 0 && !isLoading && !error) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          No flights found
+        </h3>
+        <p className="text-gray-600 mb-6">
+          We couldn't find any flights matching your search criteria.<br/>
+          Try adjusting your dates, destinations, or filters.
+        </p>
+        <Button 
+          onClick={() => {
+            setError(null);
+            setHasSearched(false);
+            resetFilters();
+          }} 
+          variant="outline"
+          className="mx-auto"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Clear all filters
+        </Button>
+      </div>
+    );
   }
 
   // No results after filtering

@@ -204,7 +204,7 @@ Built by **Varun Krishna**
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Flight data powered by [Amadeus API](https://developers.amadeus.com/)
 - UI components from [Shadcn/ui](https://ui.shadcn.com/)

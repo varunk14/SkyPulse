@@ -89,7 +89,9 @@ export function FlightList() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Search failed');
+        // Surface the hint too: it says whether this is a dead API key, a rate
+        // limit or a bad query, instead of one generic "search failed".
+        throw new Error([data.error, data.hint].filter(Boolean).join(' ') || 'Search failed');
       }
 
       setFlights(data.data || []);

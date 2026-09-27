@@ -17,7 +17,7 @@ interface SearchFormProps {
 }
 
 export function SearchForm({ originInputRef }: SearchFormProps) {
-  const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, setHasSearched } = useSearchStore();
+  const { searchParams, setSearchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, setHasSearched, setDataSource } = useSearchStore();
   const { addSearch } = useRecentSearches();
   const [isSearching, setIsSearching] = useState(false);
 
@@ -70,12 +70,19 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Search failed');
+        // Keep the hint: it says whether this was a dead key, a rate limit or a
+        // bad query rather than one generic "search failed".
+        throw new Error([data.error, data.hint].filter(Boolean).join(' ') || 'Search failed');
       }
 
       setFlights(data.data || []);
       setAirlinesDictionary(data.dictionaries?.carriers || {});
-      
+      setDataSource({
+        source: data.meta?.source === 'mock' ? 'mock' : 'amadeus',
+        degraded: Boolean(data.meta?.degraded),
+        reason: data.meta?.reason ?? null,
+      });
+
       // Save to recent searches
       if (origin && destination && dateToUse) {
         addSearch({
@@ -118,6 +125,7 @@ export function SearchForm({ originInputRef }: SearchFormProps) {
     } catch (error: any) {
       setError(error.message);
       setFlights([]);
+      setDataSource(null);
     } finally {
       setIsSearching(false);
       setIsLoading(false);

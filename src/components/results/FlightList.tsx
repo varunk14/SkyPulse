@@ -48,7 +48,7 @@ const cardVariants = {
 };
 
 export function FlightList() {
-  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams, searchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, hasSearched, setHasSearched } = useSearchStore();
+  const { flights, isLoading, error, airlinesDictionary, filters, resetFilters, setSearchParams, searchParams, setFlights, setIsLoading, setError, setAirlinesDictionary, hasSearched, setHasSearched, setDataSource } = useSearchStore();
   const { searches } = useRecentSearches();
   const [sortBy, setSortBy] = useState<SortOption>('price_asc');
 
@@ -96,9 +96,15 @@ export function FlightList() {
 
       setFlights(data.data || []);
       setAirlinesDictionary(data.dictionaries?.carriers || {});
+      setDataSource({
+        source: data.meta?.source === 'mock' ? 'mock' : 'amadeus',
+        degraded: Boolean(data.meta?.degraded),
+        reason: data.meta?.reason ?? null,
+      });
     } catch (error: any) {
       setError(error.message);
       setFlights([]);
+      setDataSource(null);
     } finally {
       setIsLoading(false);
     }

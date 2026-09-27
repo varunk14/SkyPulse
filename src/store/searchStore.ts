@@ -3,6 +3,17 @@ import { SearchParams, FilterState, FlightOffer } from '@/types';
 import { parseDuration } from '@/lib/formatters';
 import { Currency } from '@/lib/currency';
 
+/**
+ * Provenance of the current result set, taken from the search response `meta`.
+ * `degraded` means the live provider was unreachable and these offers came from
+ * the bundled dataset, which the UI must say out loud rather than showing "Live".
+ */
+export interface DataSource {
+  source: 'amadeus' | 'mock';
+  degraded: boolean;
+  reason: string | null;
+}
+
 interface SearchStore {
   // Search params
   searchParams: SearchParams;
@@ -24,7 +35,12 @@ interface SearchStore {
   setError: (error: string | null) => void;
   hasSearched: boolean;
   setHasSearched: (value: boolean) => void;
-  
+
+  // Where the last result set came from, so the header can read "Demo data"
+  // instead of "Live API" while the bundled fallback is being served.
+  dataSource: DataSource | null;
+  setDataSource: (dataSource: DataSource | null) => void;
+
   // Airlines dictionary (from API response)
   airlinesDictionary: Record<string, string>;
   setAirlinesDictionary: (dict: Record<string, string>) => void;
@@ -138,6 +154,9 @@ export const useSearchStore = create<SearchStore>((set, get) => ({
   setError: (error) => set({ error }),
   hasSearched: false,
   setHasSearched: (value) => set({ hasSearched: value }),
+
+  dataSource: null,
+  setDataSource: (dataSource) => set({ dataSource }),
 
   // Airlines dictionary
   airlinesDictionary: {},

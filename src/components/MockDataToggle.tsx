@@ -3,10 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Database, CloudOff } from 'lucide-react';
+import { Database, CloudOff, AlertTriangle } from 'lucide-react';
+import { useSearchStore } from '@/store/searchStore';
 
 export function MockDataToggle() {
   const [useMockData, setUseMockData] = useState(false);
+  const dataSource = useSearchStore((state) => state.dataSource);
+
+  // Live mode was requested but the provider was unreachable, so what is on
+  // screen is the bundled dataset. Say that rather than showing "Live API".
+  const servingFallback = !useMockData && Boolean(dataSource?.degraded);
 
   useEffect(() => {
     // Load preference from localStorage
@@ -38,6 +44,12 @@ export function MockDataToggle() {
             <span className="hidden sm:inline">Mock Data</span>
             <span className="sm:hidden">Mock</span>
           </>
+        ) : servingFallback ? (
+          <>
+            <AlertTriangle className="h-4 w-4" />
+            <span className="hidden sm:inline">Demo Data</span>
+            <span className="sm:hidden">Demo</span>
+          </>
         ) : (
           <>
             <CloudOff className="h-4 w-4" />
@@ -49,6 +61,15 @@ export function MockDataToggle() {
       {useMockData && (
         <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
           Demo Mode
+        </Badge>
+      )}
+      {servingFallback && (
+        <Badge
+          variant="secondary"
+          className="text-xs hidden sm:inline-flex"
+          title={dataSource?.reason || 'The live flight provider is unreachable.'}
+        >
+          Live provider unavailable
         </Badge>
       )}
     </div>
